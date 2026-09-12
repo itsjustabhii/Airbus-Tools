@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.interactionRepository = exports.InteractionRepository = void 0;
+const shared_1 = require("@airbus-tools/shared");
 const Interaction_1 = require("../models/Interaction");
 const BaseRepository_1 = require("./BaseRepository");
-const shared_1 = require("@airbus-tools/shared");
 class InteractionRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(Interaction_1.InteractionModel);

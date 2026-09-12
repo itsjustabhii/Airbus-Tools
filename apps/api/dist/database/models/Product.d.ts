@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { ProductCategory, ProductCondition, ProductStatus, type ProductDimensions } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IProductDocument extends Document {
     sellerId: Types.ObjectId;
     title: string;

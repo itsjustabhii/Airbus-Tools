@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageModel = exports.MessageSchema = void 0;
-const mongoose_1 = require("mongoose");
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 const MessageAttachmentSchema = new mongoose_1.Schema({
     url: { type: String, required: true },
     fileName: { type: String, required: true },
@@ -61,15 +61,20 @@ exports.MessageSchema = new mongoose_1.Schema({
     toJSON: {
         virtuals: true,
         transform: (_doc, ret) => {
-            ret.id = ret._id.toString();
-            ret.conversationId = ret.conversationId?.toString();
-            ret.senderId = ret.senderId?.toString();
-            if (Array.isArray(ret.isReadBy)) {
-                ret.isReadBy = ret.isReadBy.map((id) => id?.toString());
+            const result = ret;
+            result.id = result._id.toString();
+            if (result.conversationId) {
+                result.conversationId = result.conversationId.toString();
             }
-            delete ret._id;
-            delete ret.__v;
-            return ret;
+            if (result.senderId) {
+                result.senderId = result.senderId.toString();
+            }
+            if (Array.isArray(result.isReadBy)) {
+                result.isReadBy = result.isReadBy.map((id) => id?.toString());
+            }
+            delete result._id;
+            delete result.__v;
+            return result;
         },
     },
 });

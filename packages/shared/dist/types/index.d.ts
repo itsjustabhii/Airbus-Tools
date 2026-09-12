@@ -93,14 +93,18 @@ export interface BaseEntity {
     updatedAt: Date;
 }
 export interface User extends BaseEntity {
+    name?: string;
     email: string;
     firstName: string;
     lastName: string;
+    bio?: string;
+    company?: string;
     role: UserRole;
     status: UserStatus;
     organizationId?: string;
     phoneNumber?: string;
     avatarUrl?: string;
+    profilePicture?: string;
     lastLoginAt?: Date;
 }
 export interface Organization extends BaseEntity {

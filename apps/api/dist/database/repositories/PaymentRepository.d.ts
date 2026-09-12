@@ -1,6 +1,6 @@
+import { PaymentStatus } from '@airbus-tools/shared';
 import { type IPaymentDocument } from '../models/Payment';
 import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
-import { PaymentStatus } from '@airbus-tools/shared';
 export declare class PaymentRepository extends BaseRepository<IPaymentDocument> {
     constructor();
     findByPaymentNumber(paymentNumber: string): Promise<IPaymentDocument | null>;

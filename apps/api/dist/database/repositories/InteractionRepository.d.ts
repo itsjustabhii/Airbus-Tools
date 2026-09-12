@@ -1,6 +1,6 @@
+import { InteractionType } from '@airbus-tools/shared';
 import { type IInteractionDocument } from '../models/Interaction';
 import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
-import { InteractionType } from '@airbus-tools/shared';
 export interface InteractionAnalyticsQuery {
     entityType?: 'PRODUCT' | 'ORDER' | 'USER' | 'SEARCH';
     entityId?: string;

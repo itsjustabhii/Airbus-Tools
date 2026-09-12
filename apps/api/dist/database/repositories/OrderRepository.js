@@ -43,13 +43,14 @@ class OrderRepository extends BaseRepository_1.BaseRepository {
             query.status = filter.status;
         }
         if (filter.startDate || filter.endDate) {
-            query.createdAt = {};
+            const dateFilter = {};
             if (filter.startDate) {
-                query.createdAt.$gte = filter.startDate;
+                dateFilter.$gte = filter.startDate;
             }
             if (filter.endDate) {
-                query.createdAt.$lte = filter.endDate;
+                dateFilter.$lte = filter.endDate;
             }
+            query.createdAt = dateFilter;
         }
         return this.findPaginated(query, options);
     }

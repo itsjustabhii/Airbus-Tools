@@ -1,6 +1,6 @@
+import type { OrderStatus } from '@airbus-tools/shared';
 import { type IOrderDocument } from '../models/Order';
 import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
-import { OrderStatus } from '@airbus-tools/shared';
 export interface OrderFilter {
     buyerId?: string;
     sellerId?: string;

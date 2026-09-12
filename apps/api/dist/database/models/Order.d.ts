@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { OrderStatus, type OrderItem, type OrderShippingAddress } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IOrderDocument extends Document {
     orderNumber: string;
     buyerId: Types.ObjectId;

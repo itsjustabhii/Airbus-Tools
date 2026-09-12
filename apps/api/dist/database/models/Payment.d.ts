@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { PaymentMethod, PaymentStatus } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IPaymentDocument extends Document {
     paymentNumber: string;
     orderId: Types.ObjectId;

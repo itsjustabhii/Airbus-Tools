@@ -4,13 +4,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createApp = createApp;
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
 const env_1 = require("./config/env");
 const errorHandler_1 = require("./middlewares/errorHandler");
 const requestId_1 = require("./middlewares/requestId");
+const auth_1 = require("./routes/auth");
 const health_1 = require("./routes/health");
+const profile_1 = require("./routes/profile");
+const upload_1 = require("./routes/upload");
 function createApp() {
     const app = (0, express_1.default)();
     // ── Security headers ────────────────────────────────────────────────────────
@@ -23,11 +27,22 @@ function createApp() {
     // ── Body parsing ────────────────────────────────────────────────────────────
     app.use(express_1.default.json({ limit: '1mb' }));
     app.use(express_1.default.urlencoded({ extended: true, limit: '1mb' }));
+    // ── Cookie parsing ──────────────────────────────────────────────────────────
+    app.use((0, cookie_parser_1.default)(env_1.config.COOKIE_SECRET));
     // ── Request ID ──────────────────────────────────────────────────────────────
     app.use(requestId_1.requestIdMiddleware);
     // ── Routes ──────────────────────────────────────────────────────────────────
     app.use(health_1.healthRouter);
     app.use(env_1.config.API_PREFIX, health_1.healthRouter);
+    app.use(`${env_1.config.API_PREFIX}/auth`, auth_1.authRouter);
+    app.use(`${env_1.config.API_PREFIX}/profile`, profile_1.profileRouter);
+    app.use(`${env_1.config.API_PREFIX}/uploads`, upload_1.uploadRouter);
+    // Also support /api/* directly if prefix is /api/v1
+    if (env_1.config.API_PREFIX !== '/api') {
+        app.use('/api/auth', auth_1.authRouter);
+        app.use('/api/profile', profile_1.profileRouter);
+        app.use('/api/uploads', upload_1.uploadRouter);
+    }
     // ── 404 handler ─────────────────────────────────────────────────────────────
     app.use((_req, res) => {
         res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } });

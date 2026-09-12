@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { ConversationType } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IConversationDocument extends Document {
     participants: Array<{
         userId: Types.ObjectId;

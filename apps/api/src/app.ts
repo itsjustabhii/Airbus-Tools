@@ -8,6 +8,8 @@ import { errorHandler } from './middlewares/errorHandler';
 import { requestIdMiddleware } from './middlewares/requestId';
 import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
+import { profileRouter } from './routes/profile';
+import { uploadRouter } from './routes/upload';
 
 export function createApp(): Application {
   const app = express();
@@ -37,6 +39,15 @@ export function createApp(): Application {
   app.use(healthRouter);
   app.use(config.API_PREFIX, healthRouter);
   app.use(`${config.API_PREFIX}/auth`, authRouter);
+  app.use(`${config.API_PREFIX}/profile`, profileRouter);
+  app.use(`${config.API_PREFIX}/uploads`, uploadRouter);
+
+  // Also support /api/* directly if prefix is /api/v1
+  if (config.API_PREFIX !== '/api') {
+    app.use('/api/auth', authRouter);
+    app.use('/api/profile', profileRouter);
+    app.use('/api/uploads', uploadRouter);
+  }
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req, res) => {

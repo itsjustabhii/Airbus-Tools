@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConversationModel = exports.ConversationSchema = void 0;
-const mongoose_1 = require("mongoose");
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 const ConversationParticipantSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -74,20 +74,23 @@ exports.ConversationSchema = new mongoose_1.Schema({
     toJSON: {
         virtuals: true,
         transform: (_doc, ret) => {
-            ret.id = ret._id.toString();
-            if (ret.productId)
-                ret.productId = ret.productId.toString();
-            if (ret.orderId)
-                ret.orderId = ret.orderId.toString();
-            if (Array.isArray(ret.participants)) {
-                ret.participants = ret.participants.map((p) => ({
+            const result = ret;
+            result.id = result._id.toString();
+            if (result.productId) {
+                result.productId = result.productId.toString();
+            }
+            if (result.orderId) {
+                result.orderId = result.orderId.toString();
+            }
+            if (Array.isArray(result.participants)) {
+                result.participants = result.participants.map((p) => ({
                     ...p,
                     userId: p.userId?.toString(),
                 }));
             }
-            delete ret._id;
-            delete ret.__v;
-            return ret;
+            delete result._id;
+            delete result.__v;
+            return result;
         },
     },
 });

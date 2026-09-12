@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationModel = exports.NotificationSchema = void 0;
-const mongoose_1 = require("mongoose");
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 /**
  * Notification Schema definition
  *
@@ -65,11 +65,14 @@ exports.NotificationSchema = new mongoose_1.Schema({
     toJSON: {
         virtuals: true,
         transform: (_doc, ret) => {
-            ret.id = ret._id.toString();
-            ret.userId = ret.userId?.toString();
-            delete ret._id;
-            delete ret.__v;
-            return ret;
+            const result = ret;
+            result.id = result._id.toString();
+            if (result.userId) {
+                result.userId = result.userId.toString();
+            }
+            delete result._id;
+            delete result.__v;
+            return result;
         },
     },
 });

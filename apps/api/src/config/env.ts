@@ -11,6 +11,11 @@ const apiEnvSchema = baseEnvSchema.extend({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').default('change-me-in-production-at-least-32-chars!!'),
   JWT_EXPIRY: z.string().default('15m'),
   COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters').default('change-me-in-production-at-least-32-chars!!'),
+  AWS_REGION: z.string().default('us-east-1'),
+  AWS_S3_BUCKET: z.string().default('airbus-tools-uploads'),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_S3_ENDPOINT: z.string().optional(),
 });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

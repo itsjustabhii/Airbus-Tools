@@ -5,12 +5,16 @@ export interface IUserDocument extends Document {
   email: string;
   firstName: string;
   lastName: string;
+  name?: string;
+  bio?: string;
+  company?: string;
   passwordHash: string;
   role: UserRole;
   status: UserStatus;
   organizationId?: string;
   phoneNumber?: string;
   avatarUrl?: string;
+  profilePicture?: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +56,24 @@ export const UserSchema = new Schema<IUserDocument>(
       trim: true,
       maxlength: [100, 'Last name cannot exceed 100 characters'],
     },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Name cannot exceed 200 characters'],
+      default: null,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Bio cannot exceed 1000 characters'],
+      default: null,
+    },
+    company: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Company cannot exceed 200 characters'],
+      default: null,
+    },
     passwordHash: {
       type: String,
       required: [true, 'Password hash is required'],
@@ -79,6 +101,11 @@ export const UserSchema = new Schema<IUserDocument>(
       default: null,
     },
     avatarUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    profilePicture: {
       type: String,
       trim: true,
       default: null,

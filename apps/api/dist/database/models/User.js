@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = exports.UserSchema = void 0;
-const mongoose_1 = require("mongoose");
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 /**
  * User Schema definition
  *
@@ -38,6 +38,24 @@ exports.UserSchema = new mongoose_1.Schema({
         trim: true,
         maxlength: [100, 'Last name cannot exceed 100 characters'],
     },
+    name: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Name cannot exceed 200 characters'],
+        default: null,
+    },
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: [1000, 'Bio cannot exceed 1000 characters'],
+        default: null,
+    },
+    company: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Company cannot exceed 200 characters'],
+        default: null,
+    },
     passwordHash: {
         type: String,
         required: [true, 'Password hash is required'],
@@ -45,7 +63,7 @@ exports.UserSchema = new mongoose_1.Schema({
     role: {
         type: String,
         enum: Object.values(shared_1.UserRole),
-        default: shared_1.UserRole.BUYER,
+        default: shared_1.UserRole.AIRLINE,
         required: true,
     },
     status: {
@@ -69,6 +87,11 @@ exports.UserSchema = new mongoose_1.Schema({
         trim: true,
         default: null,
     },
+    profilePicture: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     lastLoginAt: {
         type: Date,
         default: null,
@@ -78,11 +101,12 @@ exports.UserSchema = new mongoose_1.Schema({
     toJSON: {
         virtuals: true,
         transform: (_doc, ret) => {
-            ret.id = ret._id.toString();
-            delete ret._id;
-            delete ret.__v;
-            delete ret.passwordHash;
-            return ret;
+            const result = ret;
+            result.id = result._id.toString();
+            delete result._id;
+            delete result.__v;
+            delete result.passwordHash;
+            return result;
         },
     },
 });

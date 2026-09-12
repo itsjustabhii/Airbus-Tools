@@ -1,15 +1,19 @@
-import { Schema, type Document } from 'mongoose';
 import { UserRole, UserStatus } from '@airbus-tools/shared';
+import { Schema, type Document } from 'mongoose';
 export interface IUserDocument extends Document {
     email: string;
     firstName: string;
     lastName: string;
+    name?: string;
+    bio?: string;
+    company?: string;
     passwordHash: string;
     role: UserRole;
     status: UserStatus;
     organizationId?: string;
     phoneNumber?: string;
     avatarUrl?: string;
+    profilePicture?: string;
     lastLoginAt?: Date;
     createdAt: Date;
     updatedAt: Date;

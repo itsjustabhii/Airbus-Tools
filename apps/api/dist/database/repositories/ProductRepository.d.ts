@@ -1,6 +1,7 @@
+import type { ProductCategory, ProductCondition } from '@airbus-tools/shared';
+import { ProductStatus } from '@airbus-tools/shared';
 import { type IProductDocument } from '../models/Product';
 import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
-import { ProductCategory, ProductCondition, ProductStatus } from '@airbus-tools/shared';
 export interface ProductCatalogFilter {
     category?: ProductCategory;
     condition?: ProductCondition;

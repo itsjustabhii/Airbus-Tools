@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { MessageType, type MessageAttachment } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IMessageDocument extends Document {
     conversationId: Types.ObjectId;
     senderId: Types.ObjectId;

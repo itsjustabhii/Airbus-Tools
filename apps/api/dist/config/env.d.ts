@@ -9,15 +9,31 @@ declare const apiEnvSchema: z.ZodObject<{
     MONGODB_URI: z.ZodDefault<z.ZodString>;
     REDIS_URL: z.ZodOptional<z.ZodString>;
     CORS_ORIGIN: z.ZodDefault<z.ZodString>;
+    JWT_SECRET: z.ZodDefault<z.ZodString>;
+    JWT_EXPIRY: z.ZodDefault<z.ZodString>;
+    COOKIE_SECRET: z.ZodDefault<z.ZodString>;
+    AWS_REGION: z.ZodDefault<z.ZodString>;
+    AWS_S3_BUCKET: z.ZodDefault<z.ZodString>;
+    AWS_ACCESS_KEY_ID: z.ZodOptional<z.ZodString>;
+    AWS_SECRET_ACCESS_KEY: z.ZodOptional<z.ZodString>;
+    AWS_S3_ENDPOINT: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     PORT: number;
     HOST: string;
     API_PREFIX: string;
     MONGODB_URI: string;
     CORS_ORIGIN: string;
+    JWT_SECRET: string;
+    JWT_EXPIRY: string;
+    COOKIE_SECRET: string;
+    AWS_REGION: string;
+    AWS_S3_BUCKET: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     REDIS_URL?: string | undefined;
+    AWS_ACCESS_KEY_ID?: string | undefined;
+    AWS_SECRET_ACCESS_KEY?: string | undefined;
+    AWS_S3_ENDPOINT?: string | undefined;
 }, {
     PORT?: number | undefined;
     HOST?: string | undefined;
@@ -25,6 +41,14 @@ declare const apiEnvSchema: z.ZodObject<{
     MONGODB_URI?: string | undefined;
     REDIS_URL?: string | undefined;
     CORS_ORIGIN?: string | undefined;
+    JWT_SECRET?: string | undefined;
+    JWT_EXPIRY?: string | undefined;
+    COOKIE_SECRET?: string | undefined;
+    AWS_REGION?: string | undefined;
+    AWS_S3_BUCKET?: string | undefined;
+    AWS_ACCESS_KEY_ID?: string | undefined;
+    AWS_SECRET_ACCESS_KEY?: string | undefined;
+    AWS_S3_ENDPOINT?: string | undefined;
     NODE_ENV?: "development" | "test" | "production" | undefined;
     LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
 }>;
@@ -35,9 +59,17 @@ export declare const config: {
     API_PREFIX: string;
     MONGODB_URI: string;
     CORS_ORIGIN: string;
+    JWT_SECRET: string;
+    JWT_EXPIRY: string;
+    COOKIE_SECRET: string;
+    AWS_REGION: string;
+    AWS_S3_BUCKET: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     REDIS_URL?: string | undefined;
+    AWS_ACCESS_KEY_ID?: string | undefined;
+    AWS_SECRET_ACCESS_KEY?: string | undefined;
+    AWS_S3_ENDPOINT?: string | undefined;
 };
 export {};
 //# sourceMappingURL=env.d.ts.map

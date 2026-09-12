@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { InteractionType } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface IInteractionDocument extends Document {
     userId?: Types.ObjectId;
     anonymousId?: string;

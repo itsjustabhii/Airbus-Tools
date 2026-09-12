@@ -1,6 +1,6 @@
+import type { UserRole, UserStatus } from '@airbus-tools/shared';
 import { type IUserDocument } from '../models/User';
 import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
-import { UserRole, UserStatus } from '@airbus-tools/shared';
 export interface UserSearchFilter {
     role?: UserRole;
     status?: UserStatus;

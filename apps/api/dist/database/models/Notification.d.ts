@@ -1,5 +1,5 @@
-import { Schema, type Document, type Types } from 'mongoose';
 import { NotificationType } from '@airbus-tools/shared';
+import { Schema, type Document, type Types } from 'mongoose';
 export interface INotificationDocument extends Document {
     userId: Types.ObjectId;
     type: NotificationType;

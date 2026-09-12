@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductModel = exports.ProductSchema = void 0;
-const mongoose_1 = require("mongoose");
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 const ProductDimensionsSchema = new mongoose_1.Schema({
     length: { type: Number, required: true, min: [0, 'Length cannot be negative'] },
     width: { type: Number, required: true, min: [0, 'Width cannot be negative'] },
@@ -133,11 +133,14 @@ exports.ProductSchema = new mongoose_1.Schema({
     toJSON: {
         virtuals: true,
         transform: (_doc, ret) => {
-            ret.id = ret._id.toString();
-            ret.sellerId = ret.sellerId?.toString();
-            delete ret._id;
-            delete ret.__v;
-            return ret;
+            const result = ret;
+            result.id = result._id.toString();
+            if (result.sellerId) {
+                result.sellerId = result.sellerId.toString();
+            }
+            delete result._id;
+            delete result.__v;
+            return result;
         },
     },
 });

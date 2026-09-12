@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.productRepository = exports.ProductRepository = void 0;
+const shared_1 = require("@airbus-tools/shared");
 const Product_1 = require("../models/Product");
 const BaseRepository_1 = require("./BaseRepository");
-const shared_1 = require("@airbus-tools/shared");
 class ProductRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(Product_1.ProductModel);
@@ -42,13 +42,14 @@ class ProductRepository extends BaseRepository_1.BaseRepository {
             query.partNumber = filter.partNumber.toUpperCase().trim();
         }
         if (filter.minPrice !== undefined || filter.maxPrice !== undefined) {
-            query.price = {};
+            const priceFilter = {};
             if (filter.minPrice !== undefined) {
-                query.price.$gte = filter.minPrice;
+                priceFilter.$gte = filter.minPrice;
             }
             if (filter.maxPrice !== undefined) {
-                query.price.$lte = filter.maxPrice;
+                priceFilter.$lte = filter.maxPrice;
             }
+            query.price = priceFilter;
         }
         if (filter.tags && filter.tags.length > 0) {
             query.tags = { $in: filter.tags };
