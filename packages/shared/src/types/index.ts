@@ -5,6 +5,8 @@ export enum UserRole {
   BUYER = 'BUYER',
   SELLER = 'SELLER',
   MODERATOR = 'MODERATOR',
+  AIRLINE = 'AIRLINE',
+  SUPPLIER = 'SUPPLIER',
 }
 
 export enum UserStatus {

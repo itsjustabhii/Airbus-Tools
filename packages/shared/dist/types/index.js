@@ -5,6 +5,8 @@ export var UserRole;
     UserRole["BUYER"] = "BUYER";
     UserRole["SELLER"] = "SELLER";
     UserRole["MODERATOR"] = "MODERATOR";
+    UserRole["AIRLINE"] = "AIRLINE";
+    UserRole["SUPPLIER"] = "SUPPLIER";
 })(UserRole || (UserRole = {}));
 export var UserStatus;
 (function (UserStatus) {

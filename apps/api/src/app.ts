@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Application } from 'express';
 import helmet from 'helmet';
@@ -5,6 +6,7 @@ import helmet from 'helmet';
 import { config } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
 import { requestIdMiddleware } from './middlewares/requestId';
+import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
 
 export function createApp(): Application {
@@ -25,12 +27,16 @@ export function createApp(): Application {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+  // ── Cookie parsing ──────────────────────────────────────────────────────────
+  app.use(cookieParser(config.COOKIE_SECRET));
+
   // ── Request ID ──────────────────────────────────────────────────────────────
   app.use(requestIdMiddleware);
 
   // ── Routes ──────────────────────────────────────────────────────────────────
   app.use(healthRouter);
   app.use(config.API_PREFIX, healthRouter);
+  app.use(`${config.API_PREFIX}/auth`, authRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req, res) => {
