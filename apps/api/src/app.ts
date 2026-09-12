@@ -8,6 +8,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { requestIdMiddleware } from './middlewares/requestId';
 import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
+import { ordersRouter } from './routes/orders';
 import { productsRouter } from './routes/products';
 import { profileRouter } from './routes/profile';
 import { recommendationsRouter } from './routes/recommendations';
@@ -45,6 +46,7 @@ export function createApp(): Application {
   app.use(`${config.API_PREFIX}/uploads`, uploadRouter);
   app.use(`${config.API_PREFIX}/products`, productsRouter);
   app.use(`${config.API_PREFIX}/recommendations`, recommendationsRouter);
+  app.use(`${config.API_PREFIX}/orders`, ordersRouter);
 
   // Also support /api/* directly if prefix is /api/v1
   if (config.API_PREFIX !== '/api') {
@@ -53,6 +55,7 @@ export function createApp(): Application {
     app.use('/api/uploads', uploadRouter);
     app.use('/api/products', productsRouter);
     app.use('/api/recommendations', recommendationsRouter);
+    app.use('/api/orders', ordersRouter);
   }
 
   // ── 404 handler ─────────────────────────────────────────────────────────────

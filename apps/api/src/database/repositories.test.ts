@@ -130,6 +130,7 @@ describe('Repository Layer Operations', () => {
             unitPrice: 12500,
             quantity: 1,
             totalPrice: 12500,
+            currency: 'USD',
           },
         ],
         subtotal: 12500,
@@ -150,10 +151,10 @@ describe('Repository Layer Operations', () => {
       const byBuyer = await orderRepository.findByBuyer(buyerId.toString());
       expect(byBuyer.total).toBe(1);
 
-      const updated = await orderRepository.updateStatus(order.id as string, OrderStatus.CONFIRMED, {
+      const updated = await orderRepository.updateStatus(order.id as string, OrderStatus.ACCEPTED, {
         placedAt: new Date(),
       });
-      expect(updated?.status).toBe(OrderStatus.CONFIRMED);
+      expect(updated?.status).toBe(OrderStatus.ACCEPTED);
       expect(updated?.placedAt).toBeInstanceOf(Date);
     });
   });

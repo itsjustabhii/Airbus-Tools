@@ -45,13 +45,12 @@ export enum ProductStatus {
 }
 
 export enum OrderStatus {
-  DRAFT = 'DRAFT',
   PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  IN_PROGRESS = 'IN_PROGRESS',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+  PAYMENT_PENDING = 'PAYMENT_PENDING',
+  PAID = 'PAID',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  DISPUTED = 'DISPUTED',
 }
 
 export enum PaymentMethod {
@@ -178,9 +177,12 @@ export interface OrderItem {
   productId: string;
   partNumber: string;
   title: string;
+  /** Price snapshotted at order creation time — immutable after PENDING */
   unitPrice: number;
   quantity: number;
   totalPrice: number;
+  /** Currency snapshotted at order creation time */
+  currency: string;
 }
 
 export interface OrderShippingAddress {
@@ -204,9 +206,13 @@ export interface Order extends BaseEntity {
   currency: string;
   shippingAddress: OrderShippingAddress;
   notes?: string;
+  /** Populated by supplier when rejecting */
+  rejectionReason?: string;
   placedAt?: Date;
+  acceptedAt?: Date;
+  rejectedAt?: Date;
+  paidAt?: Date;
   completedAt?: Date;
-  cancelledAt?: Date;
 }
 
 export interface ConversationParticipant {
