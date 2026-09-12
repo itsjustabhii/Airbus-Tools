@@ -4,6 +4,8 @@ import { createApp } from './app';
 import { config } from './config/env';
 import { logger } from './core/logger';
 import { database } from './database/connection';
+import { closeRedisAdapter } from './sockets/redis';
+import { initSocketServer } from './sockets/socketServer';
 
 let server: Server;
 
@@ -23,6 +25,16 @@ async function bootstrap(): Promise<void> {
       logger.info(`   Health: http://${HOST}:${PORT}/health`);
       logger.info(`   Ready:  http://${HOST}:${PORT}/ready`);
       logger.info(`   API:    http://${HOST}:${PORT}${config.API_PREFIX}`);
+
+      // 3. Initialize Socket.io server
+      void (async () => {
+        try {
+          await initSocketServer(server);
+          logger.info('🔌 Socket.io server initialized and bound to HTTP server');
+        } catch (err) {
+          logger.error({ err }, 'Failed to initialize Socket.io server');
+        }
+      })();
     });
   } catch (error) {
     logger.fatal({ err: error }, 'Failed to start application');
@@ -45,6 +57,9 @@ async function shutdown(signal: string): Promise<void> {
       });
       logger.info('HTTP server closed');
     }
+
+    // Close Redis adapter connections if initialized
+    await closeRedisAdapter();
 
     await database.disconnect();
     clearTimeout(forceTimeout);
