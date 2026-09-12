@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { OrderStatus, UserRole, type OrderItem } from '@airbus-tools/shared';
+import { NotificationType, OrderStatus, UserRole, type OrderItem } from '@airbus-tools/shared';
 
 import { ForbiddenError, NotFoundError } from '../core/errors';
 import { OrderModel, type IOrderDocument } from '../database/models/Order';
 import { ProductModel } from '../database/models/Product';
 import { orderRepository, type OrderFilter } from '../database/repositories/OrderRepository';
 import type { PaginatedResult, PaginationOptions } from '../database/repositories/BaseRepository';
+import { enqueueEmail, enqueueNotification, newJobId } from '../jobs/queues';
 
 import { assertTransition, isTerminal } from './orderStateMachine';
 
@@ -134,6 +135,44 @@ export class OrderService {
       placedAt: now,
     });
 
+    // ── Async side-effects (NOT in the HTTP request lifecycle) ────────────────
+    // Enqueue email and notification jobs — they run in the worker process.
+    void Promise.allSettled([
+      enqueueEmail({
+        name: 'send-order-confirmation',
+        jobId: newJobId(),
+        to: '',          // buyer email resolved in worker via DB lookup
+        recipientName: '',
+        orderNumber: order.orderNumber,
+        orderId: order._id.toString(),
+        totalAmount: order.totalAmount,
+        currency: order.currency,
+      }),
+      enqueueNotification({
+        name: 'create-notification',
+        jobId: newJobId(),
+        userId: buyerId,
+        type: NotificationType.ORDER_UPDATE,
+        title: 'Order Submitted',
+        message: `Your order ${order.orderNumber} has been submitted and is awaiting supplier review.`,
+        referenceEntityType: 'ORDER',
+        referenceEntityId: order._id.toString(),
+        pushViaSocket: true,
+      }),
+      // Notify seller of new incoming order
+      enqueueNotification({
+        name: 'create-notification',
+        jobId: newJobId(),
+        userId: sellerId,
+        type: NotificationType.ORDER_UPDATE,
+        title: 'New Order Received',
+        message: `You have received a new order ${order.orderNumber}. Please review and accept or reject it.`,
+        referenceEntityType: 'ORDER',
+        referenceEntityId: order._id.toString(),
+        pushViaSocket: true,
+      }),
+    ]);
+
     return order;
   }
 
@@ -186,6 +225,44 @@ export class OrderService {
     if (!updated) {
       throw new NotFoundError('Order not found');
     }
+
+    // ── Async side-effects (NOT in the HTTP request lifecycle) ────────────────
+    void Promise.allSettled([
+      enqueueEmail({
+        name: 'send-order-status-update',
+        jobId: newJobId(),
+        to: '',
+        recipientName: '',
+        orderNumber: order.orderNumber,
+        orderId: orderId,
+        previousStatus: order.status,
+        newStatus: nextStatus,
+        ...(rejectionReason !== undefined ? { rejectionReason } : {}),
+      }),
+      // Notify both parties of the status change
+      enqueueNotification({
+        name: 'create-notification',
+        jobId: newJobId(),
+        userId: order.buyerId.toString(),
+        type: NotificationType.ORDER_UPDATE,
+        title: `Order ${order.orderNumber} Updated`,
+        message: `Your order status changed to ${nextStatus}.`,
+        referenceEntityType: 'ORDER',
+        referenceEntityId: orderId,
+        pushViaSocket: true,
+      }),
+      enqueueNotification({
+        name: 'create-notification',
+        jobId: newJobId(),
+        userId: order.sellerId.toString(),
+        type: NotificationType.ORDER_UPDATE,
+        title: `Order ${order.orderNumber} Updated`,
+        message: `Order ${order.orderNumber} status changed to ${nextStatus}.`,
+        referenceEntityType: 'ORDER',
+        referenceEntityId: orderId,
+        pushViaSocket: true,
+      }),
+    ]);
 
     return updated;
   }

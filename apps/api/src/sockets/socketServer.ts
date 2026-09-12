@@ -430,6 +430,14 @@ export function getSocketServer(): Server {
 }
 
 /**
+ * Returns the active Socket.io server instance, or `null` if it has not been
+ * initialized yet. Safe to call from background worker processes.
+ */
+export function getIO(): Server | null {
+  return ioInstance;
+}
+
+/**
  * Resets the Socket.io server singleton instance.
  * Primarily used in test suites to allow re-initialization on dynamic ports.
  */
