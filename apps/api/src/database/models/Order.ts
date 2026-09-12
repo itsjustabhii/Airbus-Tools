@@ -14,9 +14,12 @@ export interface IOrderDocument extends Document {
   currency: string;
   shippingAddress: OrderShippingAddress;
   notes?: string;
+  rejectionReason?: string;
   placedAt?: Date;
+  acceptedAt?: Date;
+  rejectedAt?: Date;
+  paidAt?: Date;
   completedAt?: Date;
-  cancelledAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +55,12 @@ const OrderItemSchema = new Schema<OrderItem>(
       required: true,
       min: [0, 'Total price cannot be negative'],
     },
+    currency: {
+      type: String,
+      required: true,
+      uppercase: true,
+      trim: true,
+    },
   },
   { _id: false },
 );
@@ -69,7 +78,7 @@ const OrderShippingAddressSchema = new Schema<OrderShippingAddress>(
 
 /**
  * Order Schema definition
- * 
+ *
  * Index Rationale:
  * 1. { orderNumber: 1 } (Unique)
  *    - Query Pattern: Tracking, invoicing, and direct lookup by human-readable unique order code (e.g. ORD-2025-001).
@@ -107,7 +116,7 @@ export const OrderSchema = new Schema<IOrderDocument>(
       type: String,
       enum: Object.values(OrderStatus),
       required: true,
-      default: OrderStatus.DRAFT,
+      default: OrderStatus.PENDING,
     },
     items: {
       type: [OrderItemSchema],
@@ -155,15 +164,28 @@ export const OrderSchema = new Schema<IOrderDocument>(
       trim: true,
       default: null,
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     placedAt: {
       type: Date,
       default: null,
     },
-    completedAt: {
+    acceptedAt: {
       type: Date,
       default: null,
     },
-    cancelledAt: {
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
       type: Date,
       default: null,
     },

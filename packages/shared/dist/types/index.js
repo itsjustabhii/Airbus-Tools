@@ -45,13 +45,12 @@ export var ProductStatus;
 })(ProductStatus || (ProductStatus = {}));
 export var OrderStatus;
 (function (OrderStatus) {
-    OrderStatus["DRAFT"] = "DRAFT";
     OrderStatus["PENDING"] = "PENDING";
-    OrderStatus["CONFIRMED"] = "CONFIRMED";
-    OrderStatus["IN_PROGRESS"] = "IN_PROGRESS";
+    OrderStatus["ACCEPTED"] = "ACCEPTED";
+    OrderStatus["REJECTED"] = "REJECTED";
+    OrderStatus["PAYMENT_PENDING"] = "PAYMENT_PENDING";
+    OrderStatus["PAID"] = "PAID";
     OrderStatus["COMPLETED"] = "COMPLETED";
-    OrderStatus["CANCELLED"] = "CANCELLED";
-    OrderStatus["DISPUTED"] = "DISPUTED";
 })(OrderStatus || (OrderStatus = {}));
 export var PaymentMethod;
 (function (PaymentMethod) {

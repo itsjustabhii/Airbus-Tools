@@ -149,7 +149,7 @@ describe('Mongoose Schemas & Validation', () => {
         orderNumber: 'ord-2025-0001',
         buyerId,
         sellerId,
-        status: OrderStatus.CONFIRMED,
+        status: OrderStatus.ACCEPTED,
         items: [
           {
             productId,
@@ -158,6 +158,7 @@ describe('Mongoose Schemas & Validation', () => {
             unitPrice: 50,
             quantity: 2,
             totalPrice: 100,
+            currency: 'USD',
           },
         ],
         subtotal: 100,
@@ -187,7 +188,7 @@ describe('Mongoose Schemas & Validation', () => {
           orderNumber: 'ORD-EMPTY',
           buyerId,
           sellerId,
-          status: OrderStatus.DRAFT,
+          status: OrderStatus.PENDING,
           items: [],
           subtotal: 0,
           tax: 0,
