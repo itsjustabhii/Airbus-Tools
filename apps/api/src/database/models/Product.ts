@@ -14,6 +14,7 @@ export interface IProductDocument extends Document {
   currency: string;
   quantityAvailable: number;
   minimumOrderQuantity: number;
+  estimatedDeliveryDays?: number;
   certifications: string[];
   tags: string[];
   dimensions?: ProductDimensions;
@@ -131,6 +132,12 @@ export const ProductSchema = new Schema<IProductDocument>(
       required: true,
       min: [1, 'Minimum order quantity must be at least 1'],
       default: 1,
+    },
+    estimatedDeliveryDays: {
+      type: Number,
+      min: [1, 'Estimated delivery days must be at least 1'],
+      max: [365, 'Estimated delivery days cannot exceed 365'],
+      default: null,
     },
     certifications: {
       type: [String],
