@@ -1,12 +1,22 @@
 import supertest from 'supertest';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 import { createApp } from '../app';
+import { setupTestDB, teardownTestDB } from '../database/test-utils';
+
 
 const app = createApp();
 const request = supertest(app);
 
 describe('Health endpoints', () => {
+  beforeAll(async () => {
+    await setupTestDB();
+  });
+
+  afterAll(async () => {
+    await teardownTestDB();
+  });
+
   describe('GET /health', () => {
     it('returns 200 with ok status', async () => {
       const res = await request.get('/health');

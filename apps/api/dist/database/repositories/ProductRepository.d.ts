@@ -1,0 +1,26 @@
+import { type IProductDocument } from '../models/Product';
+import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
+import { ProductCategory, ProductCondition, ProductStatus } from '@airbus-tools/shared';
+export interface ProductCatalogFilter {
+    category?: ProductCategory;
+    condition?: ProductCondition;
+    status?: ProductStatus;
+    minPrice?: number;
+    maxPrice?: number;
+    sellerId?: string;
+    partNumber?: string;
+    tags?: string[];
+    certifications?: string[];
+    searchTerm?: string;
+}
+export declare class ProductRepository extends BaseRepository<IProductDocument> {
+    constructor();
+    findByPartNumber(partNumber: string): Promise<IProductDocument[]>;
+    findByOemPartNumber(oemPartNumber: string): Promise<IProductDocument[]>;
+    findBySeller(sellerId: string, status?: ProductStatus, options?: PaginationOptions): Promise<PaginatedResult<IProductDocument>>;
+    searchCatalog(filter: ProductCatalogFilter, options?: PaginationOptions): Promise<PaginatedResult<IProductDocument>>;
+    updateInventory(id: string, quantityChange: number): Promise<IProductDocument | null>;
+    updateStatus(id: string, status: ProductStatus): Promise<IProductDocument | null>;
+}
+export declare const productRepository: ProductRepository;
+//# sourceMappingURL=ProductRepository.d.ts.map

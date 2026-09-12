@@ -1,0 +1,10 @@
+export * from './BaseRepository';
+export * from './UserRepository';
+export * from './ProductRepository';
+export * from './OrderRepository';
+export * from './ConversationRepository';
+export * from './MessageRepository';
+export * from './PaymentRepository';
+export * from './InteractionRepository';
+export * from './NotificationRepository';
+//# sourceMappingURL=index.d.ts.map

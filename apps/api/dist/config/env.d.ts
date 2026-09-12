@@ -6,17 +6,17 @@ declare const apiEnvSchema: z.ZodObject<{
     PORT: z.ZodDefault<z.ZodNumber>;
     HOST: z.ZodDefault<z.ZodString>;
     API_PREFIX: z.ZodDefault<z.ZodString>;
-    MONGODB_URI: z.ZodOptional<z.ZodString>;
+    MONGODB_URI: z.ZodDefault<z.ZodString>;
     REDIS_URL: z.ZodOptional<z.ZodString>;
     CORS_ORIGIN: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     PORT: number;
     HOST: string;
     API_PREFIX: string;
+    MONGODB_URI: string;
     CORS_ORIGIN: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
-    MONGODB_URI?: string | undefined;
     REDIS_URL?: string | undefined;
 }, {
     PORT?: number | undefined;
@@ -33,10 +33,10 @@ export declare const config: {
     PORT: number;
     HOST: string;
     API_PREFIX: string;
+    MONGODB_URI: string;
     CORS_ORIGIN: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
-    MONGODB_URI?: string | undefined;
     REDIS_URL?: string | undefined;
 };
 export {};

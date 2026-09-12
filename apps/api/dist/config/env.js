@@ -7,7 +7,7 @@ const apiEnvSchema = config_1.baseEnvSchema.extend({
     PORT: zod_1.z.coerce.number().int().positive().default(3000),
     HOST: zod_1.z.string().default('0.0.0.0'),
     API_PREFIX: zod_1.z.string().default('/api/v1'),
-    MONGODB_URI: zod_1.z.string().url().optional(),
+    MONGODB_URI: zod_1.z.string().default('mongodb://localhost:27017/airbus-tools'),
     REDIS_URL: zod_1.z.string().optional(),
     CORS_ORIGIN: zod_1.z.string().default('*'),
 });
