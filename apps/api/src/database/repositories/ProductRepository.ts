@@ -4,7 +4,7 @@ import type { FilterQuery } from 'mongoose';
 
 import { ProductModel, type IProductDocument } from '../models/Product';
 
-import { BaseRepository, type PaginatedResult, type PaginationOptions } from './BaseRepository';
+import { BaseRepository, type PaginatedResult, type PaginationOptions, type CursorPaginationOptions, type CursorPaginatedResult } from './BaseRepository';
 
 export interface ProductCatalogFilter {
   category?: ProductCategory;
@@ -44,42 +44,20 @@ export class ProductRepository extends BaseRepository<IProductDocument> {
     return this.findPaginated(filter, options);
   }
 
-  public async searchCatalog(
-    filter: ProductCatalogFilter,
-    options?: PaginationOptions,
-  ): Promise<PaginatedResult<IProductDocument>> {
+  private buildCatalogQuery(filter: ProductCatalogFilter): FilterQuery<IProductDocument> {
     const query: FilterQuery<IProductDocument> = {};
 
-    if (filter.status) {
-      query.status = filter.status;
-    } else {
-      query.status = ProductStatus.ACTIVE;
-    }
+    query.status = filter.status ?? ProductStatus.ACTIVE;
 
-    if (filter.category) {
-      query.category = filter.category;
-    }
-
-    if (filter.condition) {
-      query.condition = filter.condition;
-    }
-
-    if (filter.sellerId) {
-      query.sellerId = filter.sellerId;
-    }
-
-    if (filter.partNumber) {
-      query.partNumber = filter.partNumber.toUpperCase().trim();
-    }
+    if (filter.category) query.category = filter.category;
+    if (filter.condition) query.condition = filter.condition;
+    if (filter.sellerId) query.sellerId = filter.sellerId;
+    if (filter.partNumber) query.partNumber = filter.partNumber.toUpperCase().trim();
 
     if (filter.minPrice !== undefined || filter.maxPrice !== undefined) {
       const priceFilter: { $gte?: number; $lte?: number } = {};
-      if (filter.minPrice !== undefined) {
-        priceFilter.$gte = filter.minPrice;
-      }
-      if (filter.maxPrice !== undefined) {
-        priceFilter.$lte = filter.maxPrice;
-      }
+      if (filter.minPrice !== undefined) priceFilter.$gte = filter.minPrice;
+      if (filter.maxPrice !== undefined) priceFilter.$lte = filter.maxPrice;
       query.price = priceFilter;
     }
 
@@ -95,7 +73,21 @@ export class ProductRepository extends BaseRepository<IProductDocument> {
       query.$text = { $search: filter.searchTerm };
     }
 
-    return this.findPaginated(query, options);
+    return query;
+  }
+
+  public async searchCatalog(
+    filter: ProductCatalogFilter,
+    options?: PaginationOptions,
+  ): Promise<PaginatedResult<IProductDocument>> {
+    return this.findPaginated(this.buildCatalogQuery(filter), options);
+  }
+
+  public async searchCatalogCursor(
+    filter: ProductCatalogFilter,
+    options?: CursorPaginationOptions,
+  ): Promise<CursorPaginatedResult<IProductDocument>> {
+    return this.findCursorPaginated(this.buildCatalogQuery(filter), options);
   }
 
   public async updateInventory(id: string, quantityChange: number): Promise<IProductDocument | null> {

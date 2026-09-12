@@ -131,11 +131,23 @@ export interface Product extends BaseEntity {
     currency: string;
     quantityAvailable: number;
     minimumOrderQuantity: number;
+    estimatedDeliveryDays?: number;
     certifications: string[];
     tags: string[];
     dimensions?: ProductDimensions;
     weightKg?: number;
     mediaUrls: string[];
+}
+export interface CursorPageMeta {
+    nextCursor: string | null;
+    prevCursor: string | null;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+export interface CursorPage<T> {
+    items: T[];
+    meta: CursorPageMeta;
 }
 export interface OrderItem {
     productId: string;
@@ -250,6 +262,10 @@ export interface ApiMeta {
     limit?: number;
     total?: number;
     totalPages?: number;
+    nextCursor?: string;
+    prevCursor?: string;
+    hasNextPage?: boolean;
+    hasPrevPage?: boolean;
 }
 export type ApiResult<T = unknown> = ApiResponse<T> | ApiErrorResponse;
 //# sourceMappingURL=index.d.ts.map

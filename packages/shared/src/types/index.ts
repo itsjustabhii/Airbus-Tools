@@ -151,11 +151,27 @@ export interface Product extends BaseEntity {
   currency: string;
   quantityAvailable: number;
   minimumOrderQuantity: number;
+  estimatedDeliveryDays?: number;
   certifications: string[]; // e.g. EASA Form 1, FAA 8130-3, CoC
   tags: string[];
   dimensions?: ProductDimensions;
   weightKg?: number;
   mediaUrls: string[];
+}
+
+// ── Cursor pagination ──────────────────────────────────────────────────────────
+
+export interface CursorPageMeta {
+  nextCursor: string | null;
+  prevCursor: string | null;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface CursorPage<T> {
+  items: T[];
+  meta: CursorPageMeta;
 }
 
 export interface OrderItem {
@@ -283,6 +299,11 @@ export interface ApiMeta {
   limit?: number;
   total?: number;
   totalPages?: number;
+  // Cursor pagination
+  nextCursor?: string;
+  prevCursor?: string;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 }
 
 export type ApiResult<T = unknown> = ApiResponse<T> | ApiErrorResponse;
