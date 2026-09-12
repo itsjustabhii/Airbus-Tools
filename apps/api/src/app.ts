@@ -10,6 +10,7 @@ import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
 import { productsRouter } from './routes/products';
 import { profileRouter } from './routes/profile';
+import { recommendationsRouter } from './routes/recommendations';
 import { uploadRouter } from './routes/upload';
 
 export function createApp(): Application {
@@ -43,6 +44,7 @@ export function createApp(): Application {
   app.use(`${config.API_PREFIX}/profile`, profileRouter);
   app.use(`${config.API_PREFIX}/uploads`, uploadRouter);
   app.use(`${config.API_PREFIX}/products`, productsRouter);
+  app.use(`${config.API_PREFIX}/recommendations`, recommendationsRouter);
 
   // Also support /api/* directly if prefix is /api/v1
   if (config.API_PREFIX !== '/api') {
@@ -50,6 +52,7 @@ export function createApp(): Application {
     app.use('/api/profile', profileRouter);
     app.use('/api/uploads', uploadRouter);
     app.use('/api/products', productsRouter);
+    app.use('/api/recommendations', recommendationsRouter);
   }
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
