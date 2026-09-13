@@ -20,6 +20,7 @@ import { NotificationType } from '@airbus-tools/shared';
 import { logger } from '../../core/logger';
 import { NotificationModel } from '../../database/models/Notification';
 import { UserModel } from '../../database/models/User';
+import { notificationService } from '../../services/notificationService';
 import { bullMQConnection } from '../redis';
 import type {
   BroadcastSystemAlertData,
@@ -69,6 +70,13 @@ async function handleCreateNotification(
   });
 
   log.info({ notificationId: notification._id?.toString() }, 'Notification persisted');
+
+  // Invalidate ephemeral unread count cache in Redis
+  try {
+    await notificationService.invalidateUnreadCountCache(data.userId);
+  } catch (err) {
+    log.warn({ err }, 'Failed to invalidate unread count cache');
+  }
 
   if (data.pushViaSocket) {
     // Dynamic import avoids a circular dependency between the worker and the
@@ -139,6 +147,11 @@ async function handleBroadcastSystemAlert(
   await NotificationModel.insertMany(docs, { ordered: false });
 
   log.info({ count: docs.length }, `System alert broadcast to ${docs.length} users`);
+
+  // Invalidate unread counts for all targeted users
+  await Promise.allSettled(
+    userIds.map((uid) => notificationService.invalidateUnreadCountCache(uid)),
+  );
 
   // Push via Socket.io to all connected users
   try {

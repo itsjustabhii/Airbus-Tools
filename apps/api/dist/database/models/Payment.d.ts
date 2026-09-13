@@ -9,6 +9,10 @@ export interface IPaymentDocument extends Document {
     currency: string;
     paymentMethod: PaymentMethod;
     status: PaymentStatus;
+    /** Opaque ID returned by the payment provider on intent creation. */
+    providerPaymentId?: string;
+    /** Client-supplied idempotency key used to deduplicate createPayment calls. */
+    idempotencyKey?: string;
     transactionReference?: string;
     gatewayResponse?: Record<string, unknown>;
     failureReason?: string;

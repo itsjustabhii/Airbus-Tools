@@ -18,6 +18,22 @@ const apiEnvSchema = config_1.baseEnvSchema.extend({
     AWS_ACCESS_KEY_ID: zod_1.z.string().optional(),
     AWS_SECRET_ACCESS_KEY: zod_1.z.string().optional(),
     AWS_S3_ENDPOINT: zod_1.z.string().optional(),
+    // ── Amazon SES ──────────────────────────────────────────────────────────────
+    SES_FROM_ADDRESS: zod_1.z.string().email().default('noreply@airbus-tools.example.com'),
+    SES_REPLY_TO: zod_1.z.string().email().optional(),
+    /** Override the SES endpoint — useful for LocalStack in local dev. */
+    AWS_SES_ENDPOINT: zod_1.z.string().url().optional(),
+    // ── Payments ─────────────────────────────────────────────────────────────────
+    /**
+     * Selects the payment provider implementation.
+     *   'mock'   → MockPaymentProvider (local dev + tests, default)
+     */
+    PAYMENT_PROVIDER: zod_1.z.enum(['mock']).default('mock'),
+    /**
+     * Shared secret used to validate inbound webhook signatures from the
+     * payment provider.  Must be set in production.
+     */
+    PAYMENT_WEBHOOK_SECRET: zod_1.z.string().min(16).default('change-me-payment-webhook-secret'),
 });
 // Validate and export the config — fails fast on misconfiguration
 exports.config = (0, config_1.validateEnv)(apiEnvSchema);

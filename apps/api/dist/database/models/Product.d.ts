@@ -13,6 +13,7 @@ export interface IProductDocument extends Document {
     currency: string;
     quantityAvailable: number;
     minimumOrderQuantity: number;
+    estimatedDeliveryDays?: number;
     certifications: string[];
     tags: string[];
     dimensions?: ProductDimensions;

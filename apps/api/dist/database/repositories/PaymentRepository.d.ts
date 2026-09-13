@@ -4,6 +4,9 @@ import { BaseRepository, type PaginatedResult, type PaginationOptions } from './
 export declare class PaymentRepository extends BaseRepository<IPaymentDocument> {
     constructor();
     findByPaymentNumber(paymentNumber: string): Promise<IPaymentDocument | null>;
+    findByProviderPaymentId(providerPaymentId: string): Promise<IPaymentDocument | null>;
+    findByIdempotencyKey(idempotencyKey: string): Promise<IPaymentDocument | null>;
+    findByOrderId(orderId: string): Promise<IPaymentDocument | null>;
     findByOrder(orderId: string): Promise<IPaymentDocument[]>;
     findByPayer(payerId: string, options?: PaginationOptions): Promise<PaginatedResult<IPaymentDocument>>;
     findByPayee(payeeId: string, options?: PaginationOptions): Promise<PaginatedResult<IPaymentDocument>>;

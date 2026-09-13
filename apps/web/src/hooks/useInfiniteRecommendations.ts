@@ -56,7 +56,7 @@ export function useInfiniteRecommendations(limit = 20): UseInfiniteRecommendatio
 
     try {
       const response = await recommendationsApi.list({
-        cursor: nextCursorRef.current ?? undefined,
+        ...(nextCursorRef.current ? { cursor: nextCursorRef.current } : {}),
         limit,
       });
 

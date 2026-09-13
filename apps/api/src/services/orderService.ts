@@ -252,14 +252,24 @@ export class OrderService {
               currency: order.currency,
             },
       ),
-      // Notify both parties of the status change
+      // Notify buyer and seller of the status change with specific titles
       enqueueNotification({
         name: 'create-notification',
         jobId: newJobId(),
         userId: order.buyerId.toString(),
         type: NotificationType.ORDER_UPDATE,
-        title: `Order ${order.orderNumber} Updated`,
-        message: `Your order status changed to ${nextStatus}.`,
+        title:
+          nextStatus === OrderStatus.ACCEPTED
+            ? 'Order Accepted'
+            : nextStatus === OrderStatus.REJECTED
+              ? 'Order Rejected'
+              : `Order ${order.orderNumber} Updated`,
+        message:
+          nextStatus === OrderStatus.ACCEPTED
+            ? `Your order ${order.orderNumber} was accepted by the supplier.`
+            : nextStatus === OrderStatus.REJECTED
+              ? `Your order ${order.orderNumber} was rejected.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`
+              : `Your order status changed to ${nextStatus}.`,
         referenceEntityType: 'ORDER',
         referenceEntityId: orderId,
         pushViaSocket: true,
@@ -269,8 +279,18 @@ export class OrderService {
         jobId: newJobId(),
         userId: order.sellerId.toString(),
         type: NotificationType.ORDER_UPDATE,
-        title: `Order ${order.orderNumber} Updated`,
-        message: `Order ${order.orderNumber} status changed to ${nextStatus}.`,
+        title:
+          nextStatus === OrderStatus.ACCEPTED
+            ? 'Order Accepted'
+            : nextStatus === OrderStatus.REJECTED
+              ? 'Order Rejected'
+              : `Order ${order.orderNumber} Updated`,
+        message:
+          nextStatus === OrderStatus.ACCEPTED
+            ? `You accepted order ${order.orderNumber}.`
+            : nextStatus === OrderStatus.REJECTED
+              ? `You rejected order ${order.orderNumber}.`
+              : `Order ${order.orderNumber} status changed to ${nextStatus}.`,
         referenceEntityType: 'ORDER',
         referenceEntityId: orderId,
         pushViaSocket: true,

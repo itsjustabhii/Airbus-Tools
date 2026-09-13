@@ -13,9 +13,12 @@ export interface IOrderDocument extends Document {
     currency: string;
     shippingAddress: OrderShippingAddress;
     notes?: string;
+    rejectionReason?: string;
     placedAt?: Date;
+    acceptedAt?: Date;
+    rejectedAt?: Date;
+    paidAt?: Date;
     completedAt?: Date;
-    cancelledAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

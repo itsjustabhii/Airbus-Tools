@@ -12,6 +12,7 @@ import { conversationsRouter } from './routes/conversations';
 import { ordersRouter } from './routes/orders';
 import { productsRouter } from './routes/products';
 import { profileRouter } from './routes/profile';
+import { notificationsRouter } from './routes/notifications';
 import { recommendationsRouter } from './routes/recommendations';
 import { paymentsRouter } from './routes/payments';
 import { uploadRouter } from './routes/upload';
@@ -54,6 +55,7 @@ export function createApp(): Application {
   app.use(`${config.API_PREFIX}/orders`, ordersRouter);
   app.use(`${config.API_PREFIX}/payments`, paymentsRouter);
   app.use(`${config.API_PREFIX}/conversations`, conversationsRouter);
+  app.use(`${config.API_PREFIX}/notifications`, notificationsRouter);
 
   // Also support /api/* directly if prefix is /api/v1
   if (config.API_PREFIX !== '/api') {
@@ -65,6 +67,7 @@ export function createApp(): Application {
     app.use('/api/orders', ordersRouter);
     app.use('/api/payments', paymentsRouter);
     app.use('/api/conversations', conversationsRouter);
+    app.use('/api/notifications', notificationsRouter);
   }
 
   // ── 404 handler ─────────────────────────────────────────────────────────────

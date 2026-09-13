@@ -32,14 +32,14 @@ export declare const presignedUrlSchema: z.ZodObject<{
     prefix: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     contentType: string;
-    fileSize?: number | undefined;
-    fileName?: string | undefined;
     prefix?: string | undefined;
+    fileName?: string | undefined;
+    fileSize?: number | undefined;
 }, {
     contentType: string;
-    fileSize?: number | undefined;
-    fileName?: string | undefined;
     prefix?: string | undefined;
+    fileName?: string | undefined;
+    fileSize?: number | undefined;
 }>;
 export type PresignedUrlInput = z.infer<typeof presignedUrlSchema>;
 //# sourceMappingURL=profile.schemas.d.ts.map

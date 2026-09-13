@@ -11,6 +11,15 @@ class PaymentRepository extends BaseRepository_1.BaseRepository {
     async findByPaymentNumber(paymentNumber) {
         return this.findOne({ paymentNumber: paymentNumber.toUpperCase().trim() });
     }
+    async findByProviderPaymentId(providerPaymentId) {
+        return this.findOne({ providerPaymentId });
+    }
+    async findByIdempotencyKey(idempotencyKey) {
+        return this.findOne({ idempotencyKey });
+    }
+    async findByOrderId(orderId) {
+        return this.findOne({ orderId });
+    }
     async findByOrder(orderId) {
         return this.find({ orderId });
     }

@@ -1,8 +1,9 @@
 import { type Server as HttpServer } from 'http';
 
-import { ConversationType, MessageType } from '@airbus-tools/shared';
+import { ConversationType, MessageType, NotificationType } from '@airbus-tools/shared';
 import { Server } from 'socket.io';
 
+import { enqueueNotification, newJobId } from '../jobs/queues';
 import { logger } from '../core/logger';
 import { conversationRepository } from '../database/repositories/ConversationRepository';
 import { messageRepository } from '../database/repositories/MessageRepository';
@@ -194,6 +195,19 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
               io.to(participantId).emit('new_message_notification', {
                 message: message.toJSON(),
                 conversationId,
+              });
+
+              // Asynchronously enqueue in-app durable notification for recipient
+              void enqueueNotification({
+                name: 'create-notification',
+                jobId: newJobId(),
+                userId: participantId,
+                type: NotificationType.MESSAGE_RECEIVED,
+                title: 'New Message',
+                message: snippet.length > 100 ? `${snippet.substring(0, 97)}...` : snippet,
+                referenceEntityType: 'MESSAGE',
+                referenceEntityId: message._id.toString(),
+                pushViaSocket: true,
               });
             }
           });
