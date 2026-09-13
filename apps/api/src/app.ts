@@ -13,6 +13,7 @@ import { ordersRouter } from './routes/orders';
 import { productsRouter } from './routes/products';
 import { profileRouter } from './routes/profile';
 import { recommendationsRouter } from './routes/recommendations';
+import { paymentsRouter } from './routes/payments';
 import { uploadRouter } from './routes/upload';
 
 export function createApp(): Application {
@@ -30,6 +31,9 @@ export function createApp(): Application {
   );
 
   // ── Body parsing ────────────────────────────────────────────────────────────
+  // NOTE: express.raw() for the payment webhook is applied per-route in
+  // paymentsRouter to avoid buffering all requests.  express.json() runs
+  // for every other route as normal.
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
@@ -48,6 +52,7 @@ export function createApp(): Application {
   app.use(`${config.API_PREFIX}/products`, productsRouter);
   app.use(`${config.API_PREFIX}/recommendations`, recommendationsRouter);
   app.use(`${config.API_PREFIX}/orders`, ordersRouter);
+  app.use(`${config.API_PREFIX}/payments`, paymentsRouter);
   app.use(`${config.API_PREFIX}/conversations`, conversationsRouter);
 
   // Also support /api/* directly if prefix is /api/v1
@@ -58,6 +63,7 @@ export function createApp(): Application {
     app.use('/api/products', productsRouter);
     app.use('/api/recommendations', recommendationsRouter);
     app.use('/api/orders', ordersRouter);
+    app.use('/api/payments', paymentsRouter);
     app.use('/api/conversations', conversationsRouter);
   }
 

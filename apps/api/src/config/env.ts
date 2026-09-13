@@ -21,6 +21,17 @@ const apiEnvSchema = baseEnvSchema.extend({
   SES_REPLY_TO: z.string().email().optional(),
   /** Override the SES endpoint — useful for LocalStack in local dev. */
   AWS_SES_ENDPOINT: z.string().url().optional(),
+  // ── Payments ─────────────────────────────────────────────────────────────────
+  /**
+   * Selects the payment provider implementation.
+   *   'mock'   → MockPaymentProvider (local dev + tests, default)
+   */
+  PAYMENT_PROVIDER: z.enum(['mock']).default('mock'),
+  /**
+   * Shared secret used to validate inbound webhook signatures from the
+   * payment provider.  Must be set in production.
+   */
+  PAYMENT_WEBHOOK_SECRET: z.string().min(16).default('change-me-payment-webhook-secret'),
 });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

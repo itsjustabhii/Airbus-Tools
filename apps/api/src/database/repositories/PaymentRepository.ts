@@ -14,6 +14,18 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> {
     return this.findOne({ paymentNumber: paymentNumber.toUpperCase().trim() });
   }
 
+  public async findByProviderPaymentId(providerPaymentId: string): Promise<IPaymentDocument | null> {
+    return this.findOne({ providerPaymentId });
+  }
+
+  public async findByIdempotencyKey(idempotencyKey: string): Promise<IPaymentDocument | null> {
+    return this.findOne({ idempotencyKey });
+  }
+
+  public async findByOrderId(orderId: string): Promise<IPaymentDocument | null> {
+    return this.findOne({ orderId });
+  }
+
   public async findByOrder(orderId: string): Promise<IPaymentDocument[]> {
     return this.find({ orderId });
   }

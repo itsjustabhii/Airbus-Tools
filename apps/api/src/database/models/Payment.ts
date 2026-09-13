@@ -10,6 +10,10 @@ export interface IPaymentDocument extends Document {
   currency: string;
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
+  /** Opaque ID returned by the payment provider on intent creation. */
+  providerPaymentId?: string;
+  /** Client-supplied idempotency key used to deduplicate createPayment calls. */
+  idempotencyKey?: string;
   transactionReference?: string;
   gatewayResponse?: Record<string, unknown>;
   failureReason?: string;
@@ -86,6 +90,16 @@ export const PaymentSchema = new Schema<IPaymentDocument>(
       required: true,
       default: PaymentStatus.PENDING,
     },
+    providerPaymentId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    idempotencyKey: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     transactionReference: {
       type: String,
       trim: true,
@@ -133,6 +147,8 @@ export const PaymentSchema = new Schema<IPaymentDocument>(
   },
 );
 
+PaymentSchema.index({ providerPaymentId: 1 }, { sparse: true });
+PaymentSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
 PaymentSchema.index({ orderId: 1 });
 PaymentSchema.index({ payerId: 1, createdAt: -1 });
 PaymentSchema.index({ payeeId: 1, createdAt: -1 });

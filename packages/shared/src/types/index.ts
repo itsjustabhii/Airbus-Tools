@@ -255,9 +255,12 @@ export interface Payment extends BaseEntity {
   currency: string;
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
+  /** Opaque ID assigned by the payment provider (e.g. Stripe PaymentIntent ID). */
+  providerPaymentId?: string;
   transactionReference?: string;
   gatewayResponse?: Record<string, unknown>;
   failureReason?: string;
+  idempotencyKey?: string;
   paidAt?: Date;
   refundedAt?: Date;
 }
