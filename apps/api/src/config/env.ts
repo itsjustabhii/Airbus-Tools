@@ -16,6 +16,11 @@ const apiEnvSchema = baseEnvSchema.extend({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_ENDPOINT: z.string().optional(),
+  // ── Amazon SES ──────────────────────────────────────────────────────────────
+  SES_FROM_ADDRESS: z.string().email().default('noreply@airbus-tools.example.com'),
+  SES_REPLY_TO: z.string().email().optional(),
+  /** Override the SES endpoint — useful for LocalStack in local dev. */
+  AWS_SES_ENDPOINT: z.string().url().optional(),
 });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
