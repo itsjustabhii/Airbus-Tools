@@ -1,1 +1,10 @@
 node_modules
+# -- Terraform -----------------------------------------------------------------
+infrastructure/terraform/**/.terraform/
+infrastructure/terraform/**/.terraform.lock.hcl
+infrastructure/terraform/**/terraform.tfvars
+infrastructure/terraform/**/terraform.tfstate
+infrastructure/terraform/**/terraform.tfstate.backup
+infrastructure/terraform/**/*.tfplan
+infrastructure/terraform/bootstrap/terraform.tfstate
+infrastructure/terraform/bootstrap/terraform.tfstate.backup

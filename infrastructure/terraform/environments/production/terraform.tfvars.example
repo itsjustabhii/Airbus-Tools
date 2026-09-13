@@ -1,0 +1,19 @@
+# terraform.tfvars.example — production
+# Copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is git-ignored and must NEVER be committed.
+
+# ── Required — no defaults ────────────────────────────────────────────────────
+
+domain_name  = "airbus-tools.example.com"
+alert_email  = "alerts@example.com"
+atlas_org_id = "YOUR_ATLAS_ORG_ID"
+
+# ── Supplied as TF_VAR_* environment variables (never in this file) ───────────
+# TF_VAR_atlas_public_key  = "abcdefgh"
+# TF_VAR_atlas_private_key = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# ── Optional overrides ────────────────────────────────────────────────────────
+
+# aws_region       = "us-east-1"
+# api_image_tag    = "sha-abc1234"
+# worker_image_tag = "sha-abc1234"
