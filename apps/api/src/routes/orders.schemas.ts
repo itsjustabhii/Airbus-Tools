@@ -50,5 +50,8 @@ export type ListOrdersQuery = z.infer<typeof listOrdersQuerySchema>;
 // ── Params ───────────────────────────────────────────────────────────────────
 
 export const orderIdParamSchema = z.object({
-  id: z.string().trim().min(1),
+  id: z
+    .string()
+    .trim()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid order ID — must be a 24-character hex ObjectId'),
 });

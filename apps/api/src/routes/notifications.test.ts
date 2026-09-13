@@ -49,9 +49,9 @@ beforeEach(async () => {
 });
 
 describe('Notifications API Routes', () => {
-  describe('GET /api/notifications', () => {
+  describe('GET /api/v1/notifications', () => {
     it('returns 401 when unauthenticated', async () => {
-      const res = await request.get('/api/notifications');
+      const res = await request.get('/api/v1/notifications');
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
     });
@@ -78,7 +78,7 @@ describe('Notifications API Routes', () => {
       ]);
 
       const res = await request
-        .get('/api/notifications')
+        .get('/api/v1/notifications')
         .set('Cookie', authCookie(token));
 
       expect(res.status).toBe(200);
@@ -109,7 +109,7 @@ describe('Notifications API Routes', () => {
       ]);
 
       const res = await request
-        .get('/api/notifications?isRead=false')
+        .get('/api/v1/notifications?isRead=false')
         .set('Cookie', authCookie(token));
 
       expect(res.status).toBe(200);
@@ -118,7 +118,7 @@ describe('Notifications API Routes', () => {
     });
   });
 
-  describe('GET /api/notifications/unread-count', () => {
+  describe('GET /api/v1/notifications/unread-count', () => {
     it('returns correct unread count', async () => {
       const user = await createTestUser();
       const token = signToken({ sub: user._id.toString(), email: user.email, role: user.role });
@@ -148,7 +148,7 @@ describe('Notifications API Routes', () => {
       ]);
 
       const res = await request
-        .get('/api/notifications/unread-count')
+        .get('/api/v1/notifications/unread-count')
         .set('Cookie', authCookie(token));
 
       expect(res.status).toBe(200);
@@ -157,7 +157,7 @@ describe('Notifications API Routes', () => {
     });
   });
 
-  describe('PATCH /api/notifications/:id/read', () => {
+  describe('PATCH /api/v1/notifications/:id/read', () => {
     it('marks a single notification as read', async () => {
       const user = await createTestUser();
       const token = signToken({ sub: user._id.toString(), email: user.email, role: user.role });
@@ -171,7 +171,7 @@ describe('Notifications API Routes', () => {
       });
 
       const res = await request
-        .patch(`/api/notifications/${notif._id}/read`)
+        .patch(`/api/v1/notifications/${notif._id}/read`)
         .set('Cookie', authCookie(token));
 
       expect(res.status).toBe(200);
@@ -197,7 +197,7 @@ describe('Notifications API Routes', () => {
       });
 
       const res = await request
-        .patch(`/api/notifications/${notif2._id}/read`)
+        .patch(`/api/v1/notifications/${notif2._id}/read`)
         .set('Cookie', authCookie(token1));
 
       expect(res.status).toBe(404);
@@ -205,7 +205,7 @@ describe('Notifications API Routes', () => {
     });
   });
 
-  describe('PATCH /api/notifications/mark-all-read', () => {
+  describe('PATCH /api/v1/notifications/mark-all-read', () => {
     it('marks all user unread notifications as read', async () => {
       const user = await createTestUser();
       const token = signToken({ sub: user._id.toString(), email: user.email, role: user.role });
@@ -228,7 +228,7 @@ describe('Notifications API Routes', () => {
       ]);
 
       const res = await request
-        .patch('/api/notifications/mark-all-read')
+        .patch('/api/v1/notifications/mark-all-read')
         .set('Cookie', authCookie(token));
 
       expect(res.status).toBe(200);

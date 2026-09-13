@@ -27,11 +27,12 @@ describe('Health endpoints', () => {
       });
     });
 
-    it('includes app name and version', async () => {
+    it('includes app name and timestamp (version omitted to avoid fingerprinting)', async () => {
       const res = await request.get('/health');
       expect(res.body.data).toHaveProperty('app');
-      expect(res.body.data).toHaveProperty('version');
       expect(res.body.data).toHaveProperty('timestamp');
+      // version is intentionally not exposed to prevent fingerprinting
+      expect(res.body.data).not.toHaveProperty('version');
     });
   });
 

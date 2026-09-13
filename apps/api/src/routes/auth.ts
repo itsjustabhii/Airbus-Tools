@@ -4,6 +4,7 @@ import { Router as createRouter } from 'express';
 import { config } from '../config/env';
 import { successResponse } from '../core/response';
 import { authenticate } from '../middlewares/authenticate';
+import { setCsrfCookie } from '../middlewares/csrf';
 import { authRateLimiter } from '../middlewares/rateLimiter';
 import {
   registerUser,
@@ -37,6 +38,7 @@ router.post('/register', authRateLimiter, (req: Request, res: Response, next: Ne
       const { token, user } = await registerUser(input);
 
       const isProd = config.NODE_ENV === 'production';
+      setCsrfCookie(res, isProd);
       res
         .cookie(AUTH_COOKIE_NAME, token, cookieOptions(isProd))
         .status(201)
@@ -58,6 +60,7 @@ router.post('/login', authRateLimiter, (req: Request, res: Response, next: NextF
       const { token, user } = await loginUser(input);
 
       const isProd = config.NODE_ENV === 'production';
+      setCsrfCookie(res, isProd);
       res
         .cookie(AUTH_COOKIE_NAME, token, cookieOptions(isProd))
         .status(200)
@@ -72,12 +75,24 @@ router.post('/login', authRateLimiter, (req: Request, res: Response, next: NextF
  * POST /api/auth/logout
  * Clears the session cookie.
  */
-router.post('/logout', authenticate, (req: Request, res: Response) => {
-  const isProd = config.NODE_ENV === 'production';
-  res
-    .clearCookie(AUTH_COOKIE_NAME, cookieOptions(isProd))
-    .status(200)
-    .json(successResponse({ message: 'Logged out successfully' }));
+router.post('/logout', authenticate, (req: Request, res: Response, next: NextFunction) => {
+  void (async () => {
+    try {
+      // Revoke the current JWT so it cannot be reused even within its expiry window
+      if (req.user?.jti) {
+        const { revokeToken } = await import('../auth/tokenRevocation');
+        const { tokenRemainingTtl } = await import('../auth/jwt');
+        await revokeToken(req.user.jti, tokenRemainingTtl(req.user));
+      }
+      const isProd = config.NODE_ENV === 'production';
+      res
+        .clearCookie(AUTH_COOKIE_NAME, cookieOptions(isProd))
+        .status(200)
+        .json(successResponse({ message: 'Logged out successfully' }));
+    } catch (err) {
+      next(err);
+    }
+  })();
 });
 
 /**
@@ -104,6 +119,14 @@ router.patch('/password', authenticate, (req: Request, res: Response, next: Next
     try {
       const input = changePasswordSchema.parse(req.body);
       await changePassword(req.user!.sub, input);
+
+      // Revoke the current token so sessions on other devices are invalidated
+      if (req.user?.jti) {
+        const { revokeToken } = await import('../auth/tokenRevocation');
+        const { tokenRemainingTtl } = await import('../auth/jwt');
+        await revokeToken(req.user.jti, tokenRemainingTtl(req.user));
+      }
+
       res.status(200).json(successResponse({ message: 'Password updated successfully' }));
     } catch (err) {
       next(err);

@@ -16,7 +16,7 @@ const request = supertest(app);
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function createUserInDB(overrides: Record<string, unknown> = {}) {
-  const hash = await bcrypt.hash('Password1', 10);
+  const hash = await bcrypt.hash('Password1@secure', 10);
   return UserModel.create({
     email: 'pilot@airline.com',
     firstName: 'Jane',
@@ -51,7 +51,7 @@ beforeEach(async () => {
 describe('POST /api/v1/auth/register', () => {
   const validPayload = {
     email: 'newuser@supplier.com',
-    password: 'Password1',
+    password: 'Password1@secure',
     firstName: 'John',
     lastName: 'Smith',
     role: UserRole.SUPPLIER,
@@ -116,7 +116,7 @@ describe('POST /api/v1/auth/login', () => {
 
     const res = await request
       .post('/api/v1/auth/login')
-      .send({ email: 'pilot@airline.com', password: 'Password1' });
+      .send({ email: 'pilot@airline.com', password: 'Password1@secure' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -169,7 +169,7 @@ describe('POST /api/v1/auth/login', () => {
     await createUserInDB();
     const res = await request
       .post('/api/v1/auth/login')
-      .send({ email: 'pilot@airline.com', password: 'Password1' });
+      .send({ email: 'pilot@airline.com', password: 'Password1@secure' });
     const body = JSON.stringify(res.body);
     expect(body).not.toContain('passwordHash');
   });
@@ -263,7 +263,7 @@ describe('PATCH /api/v1/auth/password', () => {
     const res = await request
       .patch('/api/v1/auth/password')
       .set('Cookie', authCookie(token))
-      .send({ currentPassword: 'Password1', newPassword: 'NewPass2' });
+      .send({ currentPassword: 'Password1@secure', newPassword: 'NewPass2@secure' });
 
     expect(res.status).toBe(200);
     expect(res.body.data.message).toBe('Password updated successfully');
@@ -271,7 +271,7 @@ describe('PATCH /api/v1/auth/password', () => {
     // Verify new password actually works at login
     const loginRes = await request
       .post('/api/v1/auth/login')
-      .send({ email: 'pilot@airline.com', password: 'NewPass2' });
+      .send({ email: 'pilot@airline.com', password: 'NewPass2@secure' });
     expect(loginRes.status).toBe(200);
   });
 
@@ -282,7 +282,7 @@ describe('PATCH /api/v1/auth/password', () => {
     const res = await request
       .patch('/api/v1/auth/password')
       .set('Cookie', authCookie(token))
-      .send({ currentPassword: 'WrongPass1', newPassword: 'NewPass2' });
+      .send({ currentPassword: 'WrongPass1@secure', newPassword: 'NewPass2@secure' });
 
     expect(res.status).toBe(401);
   });
@@ -290,7 +290,7 @@ describe('PATCH /api/v1/auth/password', () => {
   it('returns 401 when no token is provided', async () => {
     const res = await request
       .patch('/api/v1/auth/password')
-      .send({ currentPassword: 'Password1', newPassword: 'NewPass2' });
+      .send({ currentPassword: 'Password1@secure', newPassword: 'NewPass2@secure' });
 
     expect(res.status).toBe(401);
   });
@@ -344,7 +344,7 @@ describe('role mutation protection', () => {
   it('register endpoint does not accept admin role', async () => {
     const res = await request.post('/api/v1/auth/register').send({
       email: 'hacker@example.com',
-      password: 'Password1',
+      password: 'Password1@secure',
       firstName: 'Bad',
       lastName: 'Actor',
       role: 'ADMIN',
@@ -362,7 +362,7 @@ describe('role mutation protection', () => {
     const res = await request
       .patch('/api/v1/auth/password')
       .set('Cookie', authCookie(token))
-      .send({ currentPassword: 'Password1', newPassword: 'NewPass2', role: 'ADMIN' });
+      .send({ currentPassword: 'Password1@secure', newPassword: 'NewPass2@secure', role: 'ADMIN' });
 
     expect(res.status).toBe(200);
 
