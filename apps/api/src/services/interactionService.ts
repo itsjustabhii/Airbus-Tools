@@ -25,59 +25,54 @@ export interface RecordInteractionOptions {
 }
 
 export class InteractionService {
+  /** Build a partial options object omitting undefined-valued optional fields. */
+  private static buildInteractionOpts(opts: RecordInteractionOptions) {
+    return {
+      ...(opts.userId      !== undefined && { userId:      opts.userId }),
+      ...(opts.anonymousId !== undefined && { anonymousId: opts.anonymousId }),
+      ...(opts.ipAddress   !== undefined && { ipAddress:   opts.ipAddress }),
+      ...(opts.userAgent   !== undefined && { userAgent:   opts.userAgent }),
+      ...(opts.metadata    !== undefined && { metadata:    opts.metadata }),
+    };
+  }
+
   /** Record that a user viewed a product listing. */
   async recordViewed(productId: string, opts: RecordInteractionOptions = {}): Promise<IInteractionDocument> {
     return interactionRepository.logInteraction({
-      userId: opts.userId,
-      anonymousId: opts.anonymousId,
+      ...InteractionService.buildInteractionOpts(opts),
       type: InteractionType.VIEW,
       entityType: 'PRODUCT',
       entityId: productId,
-      ipAddress: opts.ipAddress,
-      userAgent: opts.userAgent,
-      metadata: opts.metadata,
     });
   }
 
   /** Record that a user sent a direct inquiry to a supplier about a product. */
   async recordContacted(productId: string, opts: RecordInteractionOptions = {}): Promise<IInteractionDocument> {
     return interactionRepository.logInteraction({
-      userId: opts.userId,
-      anonymousId: opts.anonymousId,
+      ...InteractionService.buildInteractionOpts(opts),
       type: InteractionType.INQUIRY,
       entityType: 'PRODUCT',
       entityId: productId,
-      ipAddress: opts.ipAddress,
-      userAgent: opts.userAgent,
-      metadata: opts.metadata,
     });
   }
 
   /** Record that a user submitted an RFQ (Request For Quotation) for a product. */
   async recordRequested(productId: string, opts: RecordInteractionOptions = {}): Promise<IInteractionDocument> {
     return interactionRepository.logInteraction({
-      userId: opts.userId,
-      anonymousId: opts.anonymousId,
+      ...InteractionService.buildInteractionOpts(opts),
       type: InteractionType.RFQ,
       entityType: 'PRODUCT',
       entityId: productId,
-      ipAddress: opts.ipAddress,
-      userAgent: opts.userAgent,
-      metadata: opts.metadata,
     });
   }
 
   /** Record that a user placed an order (entityType = ORDER, entityId = orderId). */
   async recordOrdered(orderId: string, opts: RecordInteractionOptions = {}): Promise<IInteractionDocument> {
     return interactionRepository.logInteraction({
-      userId: opts.userId,
-      anonymousId: opts.anonymousId,
+      ...InteractionService.buildInteractionOpts(opts),
       type: InteractionType.RFQ,
       entityType: 'ORDER',
       entityId: orderId,
-      ipAddress: opts.ipAddress,
-      userAgent: opts.userAgent,
-      metadata: opts.metadata,
     });
   }
 

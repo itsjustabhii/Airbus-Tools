@@ -20,9 +20,9 @@ export function parseCookies(cookieHeader: string | undefined): Record<string, s
 
   cookieHeader.split(';').forEach((item) => {
     const parts = item.split('=');
-    const name = parts[0].trim();
+    const name = parts[0]?.trim();
     if (name) {
-      cookies[name] = decodeURIComponent((parts[1] || '').trim());
+      cookies[name] = decodeURIComponent((parts[1] ?? '').trim());
     }
   });
   return cookies;

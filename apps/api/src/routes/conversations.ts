@@ -1,6 +1,7 @@
 import type { Router, Request, Response, NextFunction } from 'express';
 import { Router as createRouter } from 'express';
 import { ConversationType } from '@airbus-tools/shared';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 
 import { UnauthorizedError, NotFoundError } from '../core/errors';
@@ -75,7 +76,10 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
       if (!conversation) {
         conversation = await conversationRepository.create({
           type: ConversationType.DIRECT,
-          participants: [{ userId }, { userId: recipientId }],
+          participants: [
+            { userId: new Types.ObjectId(userId) },
+            { userId: new Types.ObjectId(recipientId) },
+          ],
         });
       }
 
@@ -99,7 +103,8 @@ router.get('/:id/messages', (req: Request, res: Response, next: NextFunction) =>
   void (async () => {
     try {
       const userId = req.user!.sub;
-      const conversationId = req.params.id;
+      const conversationId = req.params['id'];
+      if (!conversationId) throw new NotFoundError('Conversation not found');
       const { limit, before, since } = req.query as { limit?: string; before?: string; since?: string };
 
       // Authorize
@@ -124,11 +129,7 @@ router.get('/:id/messages', (req: Request, res: Response, next: NextFunction) =>
       // Cap at 100 to prevent memory exhaustion via caller-controlled limit
       const parsedLimit = limit ? Math.min(parseInt(limit, 10), 100) : 50;
 
-      const messages = await messageRepository.model
-        .find(query)
-        .sort({ createdAt: 1 })
-        .limit(parsedLimit)
-        .exec();
+      const messages = await messageRepository.findRaw(query, parsedLimit);
 
       res.status(200).json(successResponse({ messages: messages.map((m) => m.toJSON()) }));
     } catch (err) {
@@ -145,7 +146,8 @@ router.post('/:id/read', (req: Request, res: Response, next: NextFunction) => {
   void (async () => {
     try {
       const userId = req.user!.sub;
-      const conversationId = req.params.id;
+      const conversationId = req.params['id'];
+      if (!conversationId) throw new NotFoundError('Conversation not found');
 
       // Authorize
       const conversation = await conversationRepository.findById(conversationId);
@@ -160,7 +162,7 @@ router.post('/:id/read', (req: Request, res: Response, next: NextFunction) => {
 
       const now = new Date();
       const { modifiedCount } = await messageRepository.markAllInConversationAsRead(conversationId, userId);
-      await conversationRepository.updateParticipantReadTimestamp(conversationId, userId, now);
+      await conversationRepository.updateParticipantReadTimestamp(conversationId as string, userId, now);
 
       res.status(200).json(
         successResponse({

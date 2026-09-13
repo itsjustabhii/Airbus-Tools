@@ -31,8 +31,8 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
       const userId = req.user?.sub;
 
       const result = await recommendationService.getRecommendations({
-        userId,
-        cursor: query.cursor,
+        ...(userId !== undefined && { userId }),
+        ...(query.cursor !== undefined && { cursor: query.cursor }),
         limit: query.limit,
       });
 
@@ -69,8 +69,8 @@ router.post('/interactions', authenticate, (req: Request, res: Response, next: N
 
       const opts = {
         userId,
-        ipAddress,
-        userAgent,
+        ...(ipAddress !== undefined && { ipAddress }),
+        ...(userAgent !== undefined && { userAgent }),
       };
 
       let interaction;

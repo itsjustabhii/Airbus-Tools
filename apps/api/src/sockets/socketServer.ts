@@ -1,6 +1,7 @@
 import { type Server as HttpServer } from 'http';
 
 import { ConversationType, MessageType, NotificationType } from '@airbus-tools/shared';
+import { Types } from 'mongoose';
 import { Server } from 'socket.io';
 
 import { config } from '../config/env';
@@ -114,7 +115,10 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
           if (!conversation) {
             conversation = await conversationRepository.create({
               type: ConversationType.DIRECT,
-              participants: [{ userId }, { userId: recipientId }],
+              participants: [
+                { userId: new Types.ObjectId(userId) },
+                { userId: new Types.ObjectId(recipientId) },
+              ],
             });
             logger.info({ userId, recipientId, conversationId: conversation.id }, '🆕 Created new direct conversation');
           }
@@ -172,12 +176,12 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
 
           // Step 4: Persist message in MongoDB
           const message = await messageRepository.create({
-            conversationId,
-            senderId: userId,
+            conversationId: new Types.ObjectId(conversationId),
+            senderId: new Types.ObjectId(userId),
             type: type as MessageType,
             content,
             attachments,
-            isReadBy: [userId], // Sender has read it
+            isReadBy: [new Types.ObjectId(userId)], // Sender has read it
           });
 
           // Update last message metadata in conversation
@@ -333,11 +337,7 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
             }
 
             // Fetch messages sorted chronologically (oldest to newest)
-            const messages = await messageRepository.model
-              .find(query)
-              .sort({ createdAt: 1 })
-              .limit(limit)
-              .exec();
+            const messages = await messageRepository.findRaw(query, limit);
 
             const messagesJson = messages.map((m) => m.toJSON());
 
