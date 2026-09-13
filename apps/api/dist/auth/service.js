@@ -12,6 +12,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const shared_1 = require("@airbus-tools/shared");
 const errors_1 = require("../core/errors");
 const UserRepository_1 = require("../database/repositories/UserRepository");
+const queues_1 = require("../jobs/queues");
 const jwt_1 = require("./jwt");
 const BCRYPT_ROUNDS = 12;
 exports.AUTH_COOKIE_NAME = 'access_token';
@@ -46,6 +47,14 @@ async function registerUser(input) {
     }
     const user = await UserRepository_1.userRepository.create(createData);
     const token = (0, jwt_1.signToken)({ sub: String(user._id), email: user.email, role: user.role });
+    // Enqueue welcome email — fire-and-forget, does NOT block the response.
+    void (0, queues_1.enqueueEmail)({
+        name: 'send-welcome',
+        jobId: (0, queues_1.newJobId)(),
+        to: user.email,
+        recipientName: user.firstName,
+        userId: String(user._id),
+    });
     return { token, user: sanitizeUser(user) };
 }
 async function loginUser(input) {
@@ -83,5 +92,14 @@ async function changePassword(userId, input) {
     }
     const newHash = await bcrypt_1.default.hash(input.newPassword, BCRYPT_ROUNDS);
     await UserRepository_1.userRepository.updateById(userId, { passwordHash: newHash });
+    // Enqueue password-changed notification — fire-and-forget.
+    void (0, queues_1.enqueueEmail)({
+        name: 'send-password-changed',
+        jobId: (0, queues_1.newJobId)(),
+        to: user.email,
+        recipientName: user.firstName,
+        userId: userId,
+        changedAt: new Date().toISOString(),
+    });
 }
 //# sourceMappingURL=service.js.map

@@ -33,6 +33,12 @@ const OrderItemSchema = new mongoose_1.Schema({
         required: true,
         min: [0, 'Total price cannot be negative'],
     },
+    currency: {
+        type: String,
+        required: true,
+        uppercase: true,
+        trim: true,
+    },
 }, { _id: false });
 const OrderShippingAddressSchema = new mongoose_1.Schema({
     street: { type: String, required: true, trim: true },
@@ -80,7 +86,7 @@ exports.OrderSchema = new mongoose_1.Schema({
         type: String,
         enum: Object.values(shared_1.OrderStatus),
         required: true,
-        default: shared_1.OrderStatus.DRAFT,
+        default: shared_1.OrderStatus.PENDING,
     },
     items: {
         type: [OrderItemSchema],
@@ -128,15 +134,28 @@ exports.OrderSchema = new mongoose_1.Schema({
         trim: true,
         default: null,
     },
+    rejectionReason: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     placedAt: {
         type: Date,
         default: null,
     },
-    completedAt: {
+    acceptedAt: {
         type: Date,
         default: null,
     },
-    cancelledAt: {
+    rejectedAt: {
+        type: Date,
+        default: null,
+    },
+    paidAt: {
+        type: Date,
+        default: null,
+    },
+    completedAt: {
         type: Date,
         default: null,
     },

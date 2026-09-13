@@ -17,6 +17,20 @@ declare const apiEnvSchema: z.ZodObject<{
     AWS_ACCESS_KEY_ID: z.ZodOptional<z.ZodString>;
     AWS_SECRET_ACCESS_KEY: z.ZodOptional<z.ZodString>;
     AWS_S3_ENDPOINT: z.ZodOptional<z.ZodString>;
+    SES_FROM_ADDRESS: z.ZodDefault<z.ZodString>;
+    SES_REPLY_TO: z.ZodOptional<z.ZodString>;
+    /** Override the SES endpoint — useful for LocalStack in local dev. */
+    AWS_SES_ENDPOINT: z.ZodOptional<z.ZodString>;
+    /**
+     * Selects the payment provider implementation.
+     *   'mock'   → MockPaymentProvider (local dev + tests, default)
+     */
+    PAYMENT_PROVIDER: z.ZodDefault<z.ZodEnum<["mock"]>>;
+    /**
+     * Shared secret used to validate inbound webhook signatures from the
+     * payment provider.  Must be set in production.
+     */
+    PAYMENT_WEBHOOK_SECRET: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     PORT: number;
     HOST: string;
@@ -28,12 +42,17 @@ declare const apiEnvSchema: z.ZodObject<{
     COOKIE_SECRET: string;
     AWS_REGION: string;
     AWS_S3_BUCKET: string;
+    SES_FROM_ADDRESS: string;
+    PAYMENT_PROVIDER: "mock";
+    PAYMENT_WEBHOOK_SECRET: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     REDIS_URL?: string | undefined;
     AWS_ACCESS_KEY_ID?: string | undefined;
     AWS_SECRET_ACCESS_KEY?: string | undefined;
     AWS_S3_ENDPOINT?: string | undefined;
+    SES_REPLY_TO?: string | undefined;
+    AWS_SES_ENDPOINT?: string | undefined;
 }, {
     PORT?: number | undefined;
     HOST?: string | undefined;
@@ -49,6 +68,11 @@ declare const apiEnvSchema: z.ZodObject<{
     AWS_ACCESS_KEY_ID?: string | undefined;
     AWS_SECRET_ACCESS_KEY?: string | undefined;
     AWS_S3_ENDPOINT?: string | undefined;
+    SES_FROM_ADDRESS?: string | undefined;
+    SES_REPLY_TO?: string | undefined;
+    AWS_SES_ENDPOINT?: string | undefined;
+    PAYMENT_PROVIDER?: "mock" | undefined;
+    PAYMENT_WEBHOOK_SECRET?: string | undefined;
     NODE_ENV?: "development" | "test" | "production" | undefined;
     LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
 }>;
@@ -64,12 +88,17 @@ export declare const config: {
     COOKIE_SECRET: string;
     AWS_REGION: string;
     AWS_S3_BUCKET: string;
+    SES_FROM_ADDRESS: string;
+    PAYMENT_PROVIDER: "mock";
+    PAYMENT_WEBHOOK_SECRET: string;
     NODE_ENV: "development" | "test" | "production";
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     REDIS_URL?: string | undefined;
     AWS_ACCESS_KEY_ID?: string | undefined;
     AWS_SECRET_ACCESS_KEY?: string | undefined;
     AWS_S3_ENDPOINT?: string | undefined;
+    SES_REPLY_TO?: string | undefined;
+    AWS_SES_ENDPOINT?: string | undefined;
 };
 export {};
 //# sourceMappingURL=env.d.ts.map

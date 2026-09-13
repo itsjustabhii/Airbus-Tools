@@ -69,6 +69,16 @@ exports.PaymentSchema = new mongoose_1.Schema({
         required: true,
         default: shared_1.PaymentStatus.PENDING,
     },
+    providerPaymentId: {
+        type: String,
+        trim: true,
+        default: null,
+    },
+    idempotencyKey: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     transactionReference: {
         type: String,
         trim: true,
@@ -113,6 +123,8 @@ exports.PaymentSchema = new mongoose_1.Schema({
         },
     },
 });
+exports.PaymentSchema.index({ providerPaymentId: 1 }, { sparse: true });
+exports.PaymentSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
 exports.PaymentSchema.index({ orderId: 1 });
 exports.PaymentSchema.index({ payerId: 1, createdAt: -1 });
 exports.PaymentSchema.index({ payeeId: 1, createdAt: -1 });

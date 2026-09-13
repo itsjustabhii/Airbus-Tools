@@ -21,34 +21,23 @@ class ProductRepository extends BaseRepository_1.BaseRepository {
         }
         return this.findPaginated(filter, options);
     }
-    async searchCatalog(filter, options) {
+    buildCatalogQuery(filter) {
         const query = {};
-        if (filter.status) {
-            query.status = filter.status;
-        }
-        else {
-            query.status = shared_1.ProductStatus.ACTIVE;
-        }
-        if (filter.category) {
+        query.status = filter.status ?? shared_1.ProductStatus.ACTIVE;
+        if (filter.category)
             query.category = filter.category;
-        }
-        if (filter.condition) {
+        if (filter.condition)
             query.condition = filter.condition;
-        }
-        if (filter.sellerId) {
+        if (filter.sellerId)
             query.sellerId = filter.sellerId;
-        }
-        if (filter.partNumber) {
+        if (filter.partNumber)
             query.partNumber = filter.partNumber.toUpperCase().trim();
-        }
         if (filter.minPrice !== undefined || filter.maxPrice !== undefined) {
             const priceFilter = {};
-            if (filter.minPrice !== undefined) {
+            if (filter.minPrice !== undefined)
                 priceFilter.$gte = filter.minPrice;
-            }
-            if (filter.maxPrice !== undefined) {
+            if (filter.maxPrice !== undefined)
                 priceFilter.$lte = filter.maxPrice;
-            }
             query.price = priceFilter;
         }
         if (filter.tags && filter.tags.length > 0) {
@@ -60,7 +49,13 @@ class ProductRepository extends BaseRepository_1.BaseRepository {
         if (filter.searchTerm) {
             query.$text = { $search: filter.searchTerm };
         }
-        return this.findPaginated(query, options);
+        return query;
+    }
+    async searchCatalog(filter, options) {
+        return this.findPaginated(this.buildCatalogQuery(filter), options);
+    }
+    async searchCatalogCursor(filter, options) {
+        return this.findCursorPaginated(this.buildCatalogQuery(filter), options);
     }
     async updateInventory(id, quantityChange) {
         return this.model

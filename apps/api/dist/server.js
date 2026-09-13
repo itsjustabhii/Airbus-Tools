@@ -4,6 +4,8 @@ const app_1 = require("./app");
 const env_1 = require("./config/env");
 const logger_1 = require("./core/logger");
 const connection_1 = require("./database/connection");
+const redis_1 = require("./sockets/redis");
+const socketServer_1 = require("./sockets/socketServer");
 let server;
 async function bootstrap() {
     try {
@@ -19,6 +21,16 @@ async function bootstrap() {
             logger_1.logger.info(`   Health: http://${HOST}:${PORT}/health`);
             logger_1.logger.info(`   Ready:  http://${HOST}:${PORT}/ready`);
             logger_1.logger.info(`   API:    http://${HOST}:${PORT}${env_1.config.API_PREFIX}`);
+            // 3. Initialize Socket.io server
+            void (async () => {
+                try {
+                    await (0, socketServer_1.initSocketServer)(server);
+                    logger_1.logger.info('🔌 Socket.io server initialized and bound to HTTP server');
+                }
+                catch (err) {
+                    logger_1.logger.error({ err }, 'Failed to initialize Socket.io server');
+                }
+            })();
         });
     }
     catch (error) {
@@ -39,6 +51,8 @@ async function shutdown(signal) {
             });
             logger_1.logger.info('HTTP server closed');
         }
+        // Close Redis adapter connections if initialized
+        await (0, redis_1.closeRedisAdapter)();
         await connection_1.database.disconnect();
         clearTimeout(forceTimeout);
         logger_1.logger.info('Graceful shutdown completed successfully');

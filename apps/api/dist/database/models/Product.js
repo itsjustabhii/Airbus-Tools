@@ -107,6 +107,12 @@ exports.ProductSchema = new mongoose_1.Schema({
         min: [1, 'Minimum order quantity must be at least 1'],
         default: 1,
     },
+    estimatedDeliveryDays: {
+        type: Number,
+        min: [1, 'Estimated delivery days must be at least 1'],
+        max: [365, 'Estimated delivery days cannot exceed 365'],
+        default: null,
+    },
     certifications: {
         type: [String],
         default: [],
