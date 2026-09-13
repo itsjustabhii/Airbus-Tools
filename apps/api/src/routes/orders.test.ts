@@ -21,7 +21,7 @@ import {
   beforeAll, afterAll, beforeEach,
 } from 'vitest';
 
-import { OrderStatus, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
+import { OrderStatus, PaymentMethod, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
 
 import { createApp } from '../app';
 import { signToken } from '../auth/jwt';
@@ -30,6 +30,7 @@ import { UserModel } from '../database/models/User';
 import { ProductModel } from '../database/models/Product';
 import { OrderModel } from '../database/models/Order';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../database/test-utils';
+import { MockPaymentProvider } from '../services/payment/MockPaymentProvider';
 
 const app = createApp();
 const request = supertest(app);
@@ -140,6 +141,38 @@ async function transition(
     .patch(`/api/v1/orders/${orderId}/status`)
     .set('Cookie', cookie(token))
     .send({ status, ...extra });
+}
+
+/**
+ * Helper: advance an order to PAID via the webhook mechanism (Phase 10).
+ *
+ * PAYMENT_PENDING → PAID is no longer possible through the public HTTP state
+ * machine — the webhook is the authoritative path.  Tests that need a PAID
+ * order must use this helper instead of calling transition() with PAID.
+ */
+let _orderIkSuffix = 1;
+async function advanceOrderToPaid(orderId: string, airlineToken: string): Promise<void> {
+  const ik = `aa000000-0000-0000-0000-${String(_orderIkSuffix++).padStart(12, '0')}`;
+
+  const createRes = await request
+    .post('/api/v1/payments')
+    .set('Cookie', cookie(airlineToken))
+    .send({ orderId, paymentMethod: PaymentMethod.CREDIT_CARD, idempotencyKey: ik });
+
+  const providerPaymentId = createRes.body.data?.payment?.providerPaymentId as string;
+  if (!providerPaymentId) return;
+
+  const payload = Buffer.from(
+    JSON.stringify({ type: 'payment.succeeded', providerPaymentId, transactionReference: `txn_${providerPaymentId}` }),
+    'utf8',
+  );
+  const signature = MockPaymentProvider.sign(payload);
+
+  await request
+    .post('/api/v1/payments/webhook')
+    .set('x-payment-signature', signature)
+    .set('Content-Type', 'application/octet-stream')
+    .send(payload);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -385,16 +418,18 @@ describe('Order state machine — valid full lifecycle', () => {
     expect(res.body.data.order.status).toBe(OrderStatus.PAYMENT_PENDING);
   });
 
-  it('PAYMENT_PENDING → PAID (airline)', async () => {
+  it('PAYMENT_PENDING → PAID (via webhook — authoritative path)', async () => {
     const { airlineToken, supplierToken, orderId } = await createPendingOrder();
 
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    const res = await transition(orderId, airlineToken, OrderStatus.PAID);
 
-    expect(res.status).toBe(200);
-    expect(res.body.data.order.status).toBe(OrderStatus.PAID);
-    expect(res.body.data.order.paidAt).not.toBeNull();
+    // PAID is set exclusively by the payment webhook — not by PATCH /orders/:id/status
+    await advanceOrderToPaid(orderId, airlineToken);
+
+    const order = await OrderModel.findById(orderId);
+    expect(order?.status).toBe(OrderStatus.PAID);
+    expect(order?.paidAt).not.toBeNull();
   });
 
   it('PAID → COMPLETED (supplier)', async () => {
@@ -402,7 +437,7 @@ describe('Order state machine — valid full lifecycle', () => {
 
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    await transition(orderId, airlineToken, OrderStatus.PAID);
+    await advanceOrderToPaid(orderId, airlineToken);
     const res = await transition(orderId, supplierToken, OrderStatus.COMPLETED);
 
     expect(res.status).toBe(200);
@@ -481,7 +516,7 @@ describe('Order state machine — invalid transitions return 409', () => {
     const { airlineToken, supplierToken, orderId } = await createPendingOrder();
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    await transition(orderId, airlineToken, OrderStatus.PAID);
+    await advanceOrderToPaid(orderId, airlineToken);
     const res = await transition(orderId, supplierToken, OrderStatus.REJECTED);
     expect(res.status).toBe(409);
   });
@@ -522,19 +557,22 @@ describe('Order state machine — role permission on valid edges', () => {
     expect(res.status).toBe(403);
   });
 
-  it('SUPPLIER cannot confirm payment (PAID)', async () => {
+  it('SUPPLIER cannot confirm payment (PAID) — PAYMENT_PENDING→PAID is not an HTTP edge', async () => {
     const { airlineToken, supplierToken, orderId } = await createPendingOrder();
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    const res = await transition(orderId, supplierToken, OrderStatus.PAID);
-    expect(res.status).toBe(403);
+    // No role can set PAID via PATCH /orders/:id/status — the edge was removed
+    const resBySupplier = await transition(orderId, supplierToken, OrderStatus.PAID);
+    expect(resBySupplier.status).toBe(409); // INVALID_TRANSITION (not in state machine)
+    const resByAirline = await transition(orderId, airlineToken, OrderStatus.PAID);
+    expect(resByAirline.status).toBe(409); // same
   });
 
   it('AIRLINE cannot mark an order COMPLETED', async () => {
     const { airlineToken, supplierToken, orderId } = await createPendingOrder();
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    await transition(orderId, airlineToken, OrderStatus.PAID);
+    await advanceOrderToPaid(orderId, airlineToken);
     const res = await transition(orderId, airlineToken, OrderStatus.COMPLETED);
     expect(res.status).toBe(403);
   });
@@ -550,10 +588,10 @@ describe('Terminal order modification prevention', () => {
 
     await transition(orderId, supplierToken, OrderStatus.ACCEPTED);
     await transition(orderId, airlineToken, OrderStatus.PAYMENT_PENDING);
-    await transition(orderId, airlineToken, OrderStatus.PAID);
+    await advanceOrderToPaid(orderId, airlineToken);
     await transition(orderId, supplierToken, OrderStatus.COMPLETED);
 
-    // Even admin-level roles should be blocked
+    // Completed order is terminal — any further transition is blocked
     const res = await transition(orderId, supplierToken, OrderStatus.PAID);
     expect(res.status).toBe(403);
   });

@@ -21,8 +21,12 @@ export interface Transition {
  *   SUPPLIER accepts     → ACCEPTED
  *   SUPPLIER rejects     → REJECTED          (terminal)
  *   AIRLINE initiates    → PAYMENT_PENDING
- *   AIRLINE confirms pay → PAID
+ *   webhook confirms     → PAID              (internal only — no frontend path)
  *   SUPPLIER marks done  → COMPLETED         (terminal)
+ *
+ * NOTE: PAYMENT_PENDING → PAID is intentionally NOT exposed via the HTTP state
+ * machine to human callers.  Only the payment webhook handler may advance an
+ * order to PAID, enforcing that payment confirmation is always provider-authoritative.
  */
 export const VALID_TRANSITIONS: Transition[] = [
   // Supplier decisions on a new request
@@ -32,8 +36,9 @@ export const VALID_TRANSITIONS: Transition[] = [
   // Airline advances to payment after acceptance
   { from: OrderStatus.ACCEPTED,        to: OrderStatus.PAYMENT_PENDING, allowedRoles: [UserRole.AIRLINE, UserRole.ADMIN] },
 
-  // Airline confirms payment
-  { from: OrderStatus.PAYMENT_PENDING, to: OrderStatus.PAID,            allowedRoles: [UserRole.AIRLINE, UserRole.ADMIN] },
+  // PAYMENT_PENDING → PAID is NOT in this list on purpose.
+  // It is performed internally by the webhook handler and is not callable
+  // via the public /orders/:id/status endpoint.
 
   // Supplier marks order as completed once fulfilled
   { from: OrderStatus.PAID,            to: OrderStatus.COMPLETED,       allowedRoles: [UserRole.SUPPLIER, UserRole.ADMIN] },
