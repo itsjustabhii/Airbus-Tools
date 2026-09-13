@@ -49,11 +49,11 @@ beforeEach(async () => {
   await clearTestDB();
 });
 
-// ── GET /api/profile Authorization & Functionality ────────────────────────────
+// ── GET /api/v1/profile Authorization & Functionality ────────────────────────────
 
-describe('GET /api/profile', () => {
+describe('GET /api/v1/profile', () => {
   it('returns 401 Unauthorized when no auth cookie is present', async () => {
-    const res = await request.get('/api/profile');
+    const res = await request.get('/api/v1/profile');
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('UNAUTHORIZED');
@@ -61,18 +61,18 @@ describe('GET /api/profile', () => {
 
   it('returns 401 Unauthorized when invalid token is provided', async () => {
     const res = await request
-      .get('/api/profile')
+      .get('/api/v1/profile')
       .set('Cookie', authCookie('invalid-token-value'));
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
   });
 
-  it('returns authenticated user profile successfully on /api/profile and /api/v1/profile', async () => {
+  it('returns authenticated user profile successfully on /api/v1/profile and /api/v1/profile', async () => {
     const user = await createTestUser();
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .get('/api/profile')
+      .get('/api/v1/profile')
       .set('Cookie', authCookie(token));
 
     expect(res.status).toBe(200);
@@ -97,11 +97,11 @@ describe('GET /api/profile', () => {
   });
 });
 
-// ── PATCH /api/profile Authorization & Functionality ──────────────────────────
+// ── PATCH /api/v1/profile Authorization & Functionality ──────────────────────────
 
-describe('PATCH /api/profile', () => {
+describe('PATCH /api/v1/profile', () => {
   it('returns 401 Unauthorized when updating profile without auth', async () => {
-    const res = await request.patch('/api/profile').send({ name: 'New Name' });
+    const res = await request.patch('/api/v1/profile').send({ name: 'New Name' });
     expect(res.status).toBe(401);
   });
 
@@ -116,7 +116,7 @@ describe('PATCH /api/profile', () => {
     };
 
     const res = await request
-      .patch('/api/profile')
+      .patch('/api/v1/profile')
       .set('Cookie', authCookie(token))
       .send(updatePayload);
 
@@ -139,21 +139,21 @@ describe('PATCH /api/profile', () => {
 
     // Try modifying email
     const resEmail = await request
-      .patch('/api/profile')
+      .patch('/api/v1/profile')
       .set('Cookie', authCookie(token))
       .send({ email: 'hacker@airline.com' });
     expect(resEmail.status).toBe(422);
 
     // Try modifying company
     const resCompany = await request
-      .patch('/api/profile')
+      .patch('/api/v1/profile')
       .set('Cookie', authCookie(token))
       .send({ company: 'Boeing' });
     expect(resCompany.status).toBe(422);
 
     // Try modifying role
     const resRole = await request
-      .patch('/api/profile')
+      .patch('/api/v1/profile')
       .set('Cookie', authCookie(token))
       .send({ role: UserRole.ADMIN });
     expect(resRole.status).toBe(422);
@@ -166,11 +166,11 @@ describe('PATCH /api/profile', () => {
   });
 });
 
-// ── PATCH /api/profile/password ───────────────────────────────────────────────
+// ── PATCH /api/v1/profile/password ───────────────────────────────────────────────
 
-describe('PATCH /api/profile/password', () => {
+describe('PATCH /api/v1/profile/password', () => {
   it('returns 401 when changing password without auth', async () => {
-    const res = await request.patch('/api/profile/password').send({
+    const res = await request.patch('/api/v1/profile/password').send({
       currentPassword: 'Password123!',
       newPassword: 'NewPassword123!',
     });
@@ -182,7 +182,7 @@ describe('PATCH /api/profile/password', () => {
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .patch('/api/profile/password')
+      .patch('/api/v1/profile/password')
       .set('Cookie', authCookie(token))
       .send({
         currentPassword: 'Password123!',
@@ -193,7 +193,7 @@ describe('PATCH /api/profile/password', () => {
     expect(res.body.success).toBe(true);
 
     // Verify user can login with new password
-    const loginRes = await request.post('/api/auth/login').send({
+    const loginRes = await request.post('/api/v1/auth/login').send({
       email: 'pilot@airline.com',
       password: 'NewSecurePassword123!',
     });
@@ -205,7 +205,7 @@ describe('PATCH /api/profile/password', () => {
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .patch('/api/profile/password')
+      .patch('/api/v1/profile/password')
       .set('Cookie', authCookie(token))
       .send({
         currentPassword: 'WrongPassword123!',
@@ -216,11 +216,11 @@ describe('PATCH /api/profile/password', () => {
   });
 });
 
-// ── POST /api/uploads/presigned-url ──────────────────────────────────────────
+// ── POST /api/v1/uploads/presigned-url ──────────────────────────────────────────
 
-describe('POST /api/uploads/presigned-url', () => {
+describe('POST /api/v1/uploads/presigned-url', () => {
   it('returns 401 when requesting upload URL unauthenticated (no public write access)', async () => {
-    const res = await request.post('/api/uploads/presigned-url').send({
+    const res = await request.post('/api/v1/uploads/presigned-url').send({
       contentType: 'image/jpeg',
     });
     expect(res.status).toBe(401);
@@ -231,7 +231,7 @@ describe('POST /api/uploads/presigned-url', () => {
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .post('/api/uploads/presigned-url')
+      .post('/api/v1/uploads/presigned-url')
       .set('Cookie', authCookie(token))
       .send({
         contentType: 'image/jpeg',
@@ -253,7 +253,7 @@ describe('POST /api/uploads/presigned-url', () => {
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .post('/api/uploads/presigned-url')
+      .post('/api/v1/uploads/presigned-url')
       .set('Cookie', authCookie(token))
       .send({
         contentType: 'application/octet-stream',
@@ -268,7 +268,7 @@ describe('POST /api/uploads/presigned-url', () => {
     const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
 
     const res = await request
-      .post('/api/uploads/presigned-url')
+      .post('/api/v1/uploads/presigned-url')
       .set('Cookie', authCookie(token))
       .send({
         contentType: 'image/png',

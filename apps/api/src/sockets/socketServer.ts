@@ -3,6 +3,7 @@ import { type Server as HttpServer } from 'http';
 import { ConversationType, MessageType, NotificationType } from '@airbus-tools/shared';
 import { Server } from 'socket.io';
 
+import { config } from '../config/env';
 import { enqueueNotification, newJobId } from '../jobs/queues';
 import { logger } from '../core/logger';
 import { conversationRepository } from '../database/repositories/ConversationRepository';
@@ -30,10 +31,11 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
     return ioInstance;
   }
 
-  // Create Socket.io server with CORS configured to match Express
+  // Create Socket.io server with CORS configured to match Express REST API.
+  // Uses the same CORS_ORIGIN env value so both transports share one policy.
   const io = new Server(httpServer, {
     cors: {
-      origin: '*', // We can support open CORS or bind to specific configured origin
+      origin: config.CORS_ORIGIN,
       credentials: true,
     },
     pingTimeout: 60000,
@@ -303,7 +305,9 @@ export async function initSocketServer(httpServer: HttpServer): Promise<Server> 
       ) => {
         void (async () => {
           try {
-            const { conversationId, limit = 50, before, since } = payload;
+            // Cap caller-supplied limit to prevent memory exhaustion
+            const { conversationId, limit: rawLimit = 50, before, since } = payload;
+            const limit = Math.min(Math.max(1, rawLimit), 100);
             if (!conversationId) {
               throw new Error('conversationId is required');
             }

@@ -17,9 +17,10 @@ import { logger } from '../core/logger';
 function parseRedisUrl(url: string): ConnectionOptions {
   try {
     const parsed = new URL(url);
-    const opts: ConnectionOptions & { password?: string; db?: number } = {
+    const isTls = parsed.protocol === 'rediss:';
+    const opts: ConnectionOptions & { password?: string; db?: number; tls?: object } = {
       host: parsed.hostname || '127.0.0.1',
-      port: parsed.port ? parseInt(parsed.port, 10) : 6379,
+      port: parsed.port ? parseInt(parsed.port, 10) : (isTls ? 6380 : 6379),
     };
     if (parsed.password) {
       opts.password = decodeURIComponent(parsed.password);
@@ -27,6 +28,10 @@ function parseRedisUrl(url: string): ConnectionOptions {
     const dbPath = parsed.pathname?.replace('/', '');
     if (dbPath && !isNaN(Number(dbPath))) {
       opts.db = parseInt(dbPath, 10);
+    }
+    // Enable TLS when the scheme is rediss://
+    if (isTls) {
+      opts.tls = {};
     }
     return opts;
   } catch {
@@ -46,6 +51,10 @@ function parseRedisUrl(url: string): ConnectionOptions {
  * `lazyConnect: true`         — don't connect until the first command is
  *   issued; prevents connection noise during tests / cold-starts.
  */
+if (config.NODE_ENV === 'production' && !config.REDIS_URL) {
+  logger.warn('REDIS_URL is not configured in production — BullMQ queues will not function correctly');
+}
+
 const baseOpts = config.REDIS_URL
   ? parseRedisUrl(config.REDIS_URL)
   : { host: '127.0.0.1', port: 6379 };

@@ -5,7 +5,9 @@ import helmet from 'helmet';
 
 import { config } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
+import { csrfProtection } from './middlewares/csrf';
 import { requestIdMiddleware } from './middlewares/requestId';
+import { generalRateLimiter } from './middlewares/rateLimiter';
 import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
 import { conversationsRouter } from './routes/conversations';
@@ -19,6 +21,11 @@ import { uploadRouter } from './routes/upload';
 
 export function createApp(): Application {
   const app = express();
+
+  // ── Trust proxy (for correct client IP behind load balancers in production) ─
+  if (config.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(helmet());
@@ -44,6 +51,12 @@ export function createApp(): Application {
   // ── Request ID ──────────────────────────────────────────────────────────────
   app.use(requestIdMiddleware);
 
+  // ── CSRF protection (double-submit cookie) ───────────────────────────────────
+  app.use(csrfProtection);
+
+  // ── Global rate limiting ─────────────────────────────────────────────────────
+  app.use(generalRateLimiter);
+
   // ── Routes ──────────────────────────────────────────────────────────────────
   app.use(healthRouter);
   app.use(config.API_PREFIX, healthRouter);
@@ -56,19 +69,6 @@ export function createApp(): Application {
   app.use(`${config.API_PREFIX}/payments`, paymentsRouter);
   app.use(`${config.API_PREFIX}/conversations`, conversationsRouter);
   app.use(`${config.API_PREFIX}/notifications`, notificationsRouter);
-
-  // Also support /api/* directly if prefix is /api/v1
-  if (config.API_PREFIX !== '/api') {
-    app.use('/api/auth', authRouter);
-    app.use('/api/profile', profileRouter);
-    app.use('/api/uploads', uploadRouter);
-    app.use('/api/products', productsRouter);
-    app.use('/api/recommendations', recommendationsRouter);
-    app.use('/api/orders', ordersRouter);
-    app.use('/api/payments', paymentsRouter);
-    app.use('/api/conversations', conversationsRouter);
-    app.use('/api/notifications', notificationsRouter);
-  }
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req, res) => {

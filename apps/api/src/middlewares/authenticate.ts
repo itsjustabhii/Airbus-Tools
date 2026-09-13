@@ -4,6 +4,7 @@ import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { UnauthorizedError } from '../core/errors';
 import { AUTH_COOKIE_NAME } from '../auth/service';
 import { verifyToken, type JwtPayload } from '../auth/jwt';
+import { isTokenRevoked } from '../auth/tokenRevocation';
 
 // Augment Express Request to carry the authenticated principal
 declare global {
@@ -25,9 +26,9 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
     return next(new UnauthorizedError('Authentication required'));
   }
 
+  let payload: JwtPayload;
   try {
-    req.user = verifyToken(token);
-    next();
+    payload = verifyToken(token);
   } catch (err) {
     if (err instanceof TokenExpiredError) {
       return next(new UnauthorizedError('Token has expired'));
@@ -35,6 +36,20 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
     if (err instanceof JsonWebTokenError) {
       return next(new UnauthorizedError('Invalid token'));
     }
-    next(err);
+    return next(err);
   }
+
+  // Check revocation list (async — wraps in void to satisfy Express sync signature)
+  void (async () => {
+    try {
+      const revoked = await isTokenRevoked(payload.jti);
+      if (revoked) {
+        return next(new UnauthorizedError('Token has been revoked'));
+      }
+      req.user = payload;
+      next();
+    } catch (err) {
+      next(err);
+    }
+  })();
 }

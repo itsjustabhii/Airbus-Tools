@@ -120,7 +120,8 @@ export async function createPresignedUploadUrl(
     Bucket: config.AWS_S3_BUCKET,
     Key: key,
     ContentType: contentType,
-    ...(fileSize ? { ContentLength: fileSize } : {}),
+    // ContentLength is always set — required to enforce size limits in the presigned URL
+    ...(fileSize !== undefined ? { ContentLength: fileSize } : {}),
     Metadata: {
       'uploaded-by': userId,
       'original-filename': fileName ? path.basename(fileName).replace(/[^\x20-\x7E]/g, '') : '',

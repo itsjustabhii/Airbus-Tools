@@ -18,8 +18,7 @@ export const authRateLimiter: RequestHandler = isTest
       standardHeaders: true,
       legacyHeaders: false,
       skipSuccessfulRequests: false,
-      // In production, trust proxy so the real IP is used
-      ...(config.NODE_ENV === 'production' && { trustProxy: 1 }),
+      // trust proxy is set at the Express app level (app.set('trust proxy', 1)) — not here
       handler: (_req, res) => {
         res.status(429).json({
           success: false,

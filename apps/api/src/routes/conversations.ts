@@ -1,6 +1,7 @@
 import type { Router, Request, Response, NextFunction } from 'express';
 import { Router as createRouter } from 'express';
 import { ConversationType } from '@airbus-tools/shared';
+import { z } from 'zod';
 
 import { UnauthorizedError, NotFoundError } from '../core/errors';
 import { successResponse } from '../core/response';
@@ -47,16 +48,23 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
  * POST /api/v1/conversations
  * Find or create a direct conversation with another user.
  */
+const createConversationSchema = z.object({
+  recipientId: z
+    .string()
+    .trim()
+    .regex(/^[0-9a-fA-F]{24}$/, 'recipientId must be a valid 24-character ObjectId'),
+});
+
 router.post('/', (req: Request, res: Response, next: NextFunction) => {
   void (async () => {
     try {
       const userId = req.user!.sub;
-      const { recipientId } = req.body as { recipientId?: string };
-
-      if (!recipientId) {
-        res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'recipientId is required' } });
+      const parseResult = createConversationSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: parseResult.error.errors[0]?.message ?? 'Invalid input' } });
         return;
       }
+      const { recipientId } = parseResult.data;
 
       if (recipientId === userId) {
         res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Cannot start a conversation with yourself' } });
@@ -105,17 +113,21 @@ router.get('/:id/messages', (req: Request, res: Response, next: NextFunction) =>
         throw new UnauthorizedError('Unauthorized: You are not a participant of this conversation');
       }
 
-      const query: any = { conversationId };
+      const query: Record<string, unknown> = { conversationId };
       if (before || since) {
-        query.createdAt = {};
-        if (before) query.createdAt.$lt = new Date(before);
-        if (since) query.createdAt.$gt = new Date(since);
+        const dateCriteria: Record<string, Date> = {};
+        if (before) dateCriteria.$lt = new Date(before);
+        if (since) dateCriteria.$gt = new Date(since);
+        query.createdAt = dateCriteria;
       }
+
+      // Cap at 100 to prevent memory exhaustion via caller-controlled limit
+      const parsedLimit = limit ? Math.min(parseInt(limit, 10), 100) : 50;
 
       const messages = await messageRepository.model
         .find(query)
         .sort({ createdAt: 1 })
-        .limit(limit ? parseInt(limit, 10) : 50)
+        .limit(parsedLimit)
         .exec();
 
       res.status(200).json(successResponse({ messages: messages.map((m) => m.toJSON()) }));

@@ -12,5 +12,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
     },
+    // Provide required secrets for the test environment so env-schema validation passes.
+    // These are test-only values — the superRefine production guard only fires when NODE_ENV=production.
+    env: {
+      NODE_ENV: 'test',
+      JWT_SECRET: 'test-jwt-secret-that-is-at-least-32-chars!!',
+      COOKIE_SECRET: 'test-cookie-secret-at-least-32-chars!!',
+      PAYMENT_WEBHOOK_SECRET: 'test-payment-webhook-secret',
+    },
   },
 });

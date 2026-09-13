@@ -100,6 +100,9 @@ export class MockPaymentProvider implements IPaymentProvider {
    * identically in `MockPaymentProvider.sign()` so tests can generate
    * valid signatures without coupling to implementation details.
    */
+  /** Maximum age of a valid webhook in seconds (mirrors Stripe's tolerance). */
+  private static readonly WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 300;
+
   parseWebhook(rawBody: Buffer, signature: string): ParsedWebhookEvent {
     // Parse signature header
     const parts: Record<string, string> = {};
@@ -115,6 +118,13 @@ export class MockPaymentProvider implements IPaymentProvider {
 
     if (!timestamp || !v1) {
       throw new Error('INVALID_WEBHOOK_SIGNATURE');
+    }
+
+    // Replay protection: reject webhooks older than the tolerance window
+    const ts = parseInt(timestamp, 10);
+    const now = Math.floor(Date.now() / 1000);
+    if (isNaN(ts) || Math.abs(now - ts) > MockPaymentProvider.WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS) {
+      throw new Error('WEBHOOK_TIMESTAMP_TOO_OLD');
     }
 
     // Re-compute expected signature

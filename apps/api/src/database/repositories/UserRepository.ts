@@ -11,6 +11,14 @@ export interface UserSearchFilter {
   search?: string;
 }
 
+/**
+ * Escapes all regex special characters in a string so that it can be safely
+ * used inside `new RegExp()` without enabling ReDoS via attacker-controlled input.
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export class UserRepository extends BaseRepository<IUserDocument> {
   constructor() {
     super(UserModel);
@@ -63,7 +71,9 @@ export class UserRepository extends BaseRepository<IUserDocument> {
       query.organizationId = filter.organizationId;
     }
     if (filter.search) {
-      const searchRegex = new RegExp(filter.search.trim(), 'i');
+      // Escape user input before compiling to regex to prevent ReDoS.
+      const safePattern = escapeRegex(filter.search.trim());
+      const searchRegex = new RegExp(safePattern, 'i');
       query.$or = [
         { email: searchRegex },
         { firstName: searchRegex },

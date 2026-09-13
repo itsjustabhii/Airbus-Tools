@@ -34,14 +34,14 @@ export function parseCookies(cookieHeader: string | undefined): Record<string, s
  */
 export function socketAuthMiddleware(socket: AuthenticatedSocket, next: (err?: Error) => void): void {
   const auth = socket.handshake.auth || {};
-  const query = socket.handshake.query || {};
   const cookieHeader = socket.handshake.headers.cookie;
 
+  // Accept token only from handshake.auth or the HttpOnly cookie.
+  // Query-string tokens are explicitly NOT accepted — URL parameters appear in
+  // access logs, browser history, and referrer headers, which would expose tokens.
   let token: unknown =
     (auth.token as unknown) ||
-    (auth.access_token as unknown) ||
-    (query.token as unknown) ||
-    (query.access_token as unknown);
+    (auth.access_token as unknown);
 
   if (!token && cookieHeader) {
     const cookies = parseCookies(cookieHeader);
