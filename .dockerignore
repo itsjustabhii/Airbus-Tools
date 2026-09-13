@@ -1,0 +1,43 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Dependencies (rebuilt inside Docker)
+node_modules
+**/node_modules
+
+# Build artifacts (rebuilt inside Docker)
+**/dist
+**/coverage
+
+# Dev tooling
+.editorconfig
+.eslintrc.cjs
+.prettierrc
+.prettierignore
+tsconfig.eslint.json
+
+# Docs and planning
+docs
+phase-0-plan.md
+README.md
+
+# Docker files (no recursive embedding)
+docker-compose.yml
+**/.dockerignore
+**/Dockerfile*
+
+# Local env files
+.env
+**/.env
+# Keep .env.example for reference documentation only (not loaded at runtime)
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Test coverage
+**/coverage
+**/*.test.ts
+**/*.spec.ts

@@ -60,6 +60,14 @@ export class MessageRepository extends BaseRepository<IMessageDocument> {
       isReadBy: { $ne: userId },
     });
   }
+
+  /** Raw chronological query used by REST and WebSocket message-history endpoints. */
+  public async findRaw(
+    query: Record<string, unknown>,
+    limit: number,
+  ): Promise<IMessageDocument[]> {
+    return this.model.find(query).sort({ createdAt: 1 }).limit(limit).exec();
+  }
 }
 
 export const messageRepository = new MessageRepository();

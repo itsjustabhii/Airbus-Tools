@@ -9,7 +9,7 @@ export interface UseInfiniteRecommendationsResult {
   status: FeedStatus;
   error: string | null;
   /** Attach this ref to the sentinel element at the bottom of the list */
-  sentinelRef: React.RefObject<HTMLDivElement | null>;
+  sentinelRef: React.RefObject<HTMLDivElement>;
   /** Manually retry after an error */
   retry: () => void;
 }
@@ -44,7 +44,7 @@ export function useInfiniteRecommendations(limit = 20): UseInfiniteRecommendatio
   const seenIdsRef = useRef<Set<string>>(new Set());
 
   // Sentinel DOM element for IntersectionObserver
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const fetchNextPage = useCallback(async () => {
     // Deduplication: skip if already fetching or no more pages

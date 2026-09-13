@@ -1,6 +1,38 @@
-version: '3.9'
+# docker-compose.yml — local development
+# All services use the build context at the repo root so the monorepo
+# packages are available during the multi-stage build.
+#
+# Required secrets (set in .env at the repo root, never committed):
+#   JWT_SECRET               – at least 32 chars
+#   COOKIE_SECRET            – at least 32 chars
+#   PAYMENT_WEBHOOK_SECRET   – at least 16 chars
+
+
+# ── Reusable YAML anchors ─────────────────────────────────────────────────────
+x-api-common: &api-common
+  build:
+    context: .          # repo root — required for monorepo package resolution
+  depends_on:
+    mongodb:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  environment:
+    NODE_ENV: development
+    MONGODB_URI: mongodb://mongodb:27017/airbus-tools
+    REDIS_URL: redis://redis:6379
+    # ── Secrets: sourced from the host .env file ──
+    JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — add it to .env}
+    COOKIE_SECRET: ${COOKIE_SECRET:?COOKIE_SECRET is required — add it to .env}
+    PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required — add it to .env}
+  restart: unless-stopped
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
   mongodb:
     image: mongo:7.0
     container_name: airbus-tools-mongodb
@@ -40,6 +72,100 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # ── Application services ────────────────────────────────────────────────────
+
+  api:
+    <<: *api-common
+    container_name: airbus-tools-api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      HOST: 0.0.0.0
+      API_PREFIX: /api/v1
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      CORS_ORIGIN: http://localhost:5173,http://localhost:80
+      MONGODB_URI: mongodb://mongodb:27017/airbus-tools
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — add it to .env}
+      JWT_EXPIRY: ${JWT_EXPIRY:-15m}
+      COOKIE_SECRET: ${COOKIE_SECRET:?COOKIE_SECRET is required — add it to .env}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required — add it to .env}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-airbus-tools-uploads}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT:-}
+      SES_FROM_ADDRESS: ${SES_FROM_ADDRESS:-noreply@airbus-tools.example.com}
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    stop_grace_period: 15s   # allow SIGTERM handler to drain connections
+
+  worker:
+    <<: *api-common
+    container_name: airbus-tools-worker
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.worker
+      target: production
+    # No port binding — workers consume jobs from Redis queues, no inbound HTTP
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      MONGODB_URI: mongodb://mongodb:27017/airbus-tools
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — add it to .env}
+      COOKIE_SECRET: ${COOKIE_SECRET:?COOKIE_SECRET is required — add it to .env}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required — add it to .env}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-airbus-tools-uploads}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      SES_FROM_ADDRESS: ${SES_FROM_ADDRESS:-noreply@airbus-tools.example.com}
+    healthcheck:
+      # Worker health: verify the Node.js process (PID 1) is running
+      test: ['CMD', 'kill', '-0', '1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    stop_grace_period: 20s   # allow worker to drain in-progress jobs (15 s timeout in worker.ts)
+
+  web:
+    container_name: airbus-tools-web
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api/v1}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Airbus-Tools}
+    ports:
+      - '5173:80'       # map to 5173 to match the CORS_ORIGIN setting above
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:80/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    stop_grace_period: 5s
+    restart: unless-stopped
+
+# ── Volumes ────────────────────────────────────────────────────────────────────
 volumes:
   mongodb_data:
     driver: local
