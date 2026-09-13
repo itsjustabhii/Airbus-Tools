@@ -1,0 +1,355 @@
+###############################################################################
+# Staging Deploy Pipeline
+#
+# Triggered on every push to `develop`.
+# Mirrors the production pipeline but targets the staging environment and does
+# not require a manual approval gate.
+#
+# Authentication: OIDC — no long-lived AWS credentials stored in GitHub.
+# Required GitHub Environment: "staging"
+# Required GitHub OIDC variables / secrets (set on the environment):
+#   vars.AWS_REGION                   e.g. us-east-1
+#   vars.AWS_ACCOUNT_ID               12-digit account ID
+#   vars.ECR_API_REPOSITORY           e.g. airbus-tools-staging-api
+#   vars.ECR_WORKER_REPOSITORY        e.g. airbus-tools-staging-worker
+#   vars.ECS_CLUSTER                  e.g. airbus-tools-staging
+#   vars.ECS_API_SERVICE              e.g. airbus-tools-staging-api
+#   vars.ECS_WORKER_SERVICE           e.g. airbus-tools-staging-worker
+#   vars.API_TASK_DEFINITION          e.g. airbus-tools-staging-api
+#   vars.WORKER_TASK_DEFINITION       e.g. airbus-tools-staging-worker
+#   vars.API_CONTAINER_NAME           e.g. api
+#   vars.WORKER_CONTAINER_NAME        e.g. worker
+#   vars.S3_WEB_BUCKET                e.g. airbus-tools-staging-web
+#   vars.CLOUDFRONT_DISTRIBUTION_ID   CloudFront distribution ID
+#   vars.API_HEALTH_URL               e.g. https://api.staging.airbus-tools.example.com/health
+#   vars.VITE_API_URL                 e.g. https://api.staging.airbus-tools.example.com
+#   secrets.GH_OIDC_ROLE_ARN          IAM role ARN for GitHub Actions OIDC
+###############################################################################
+
+name: Deploy — Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true   # newer commits to develop supersede in-flight staging deploys
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ── 1. Tests ─────────────────────────────────────────────────────────────────
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    environment: staging
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run tests (api)
+        run: npm run test --workspace=apps/api
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Run tests (web)
+        run: npm run test --workspace=apps/web
+        env:
+          NODE_ENV: test
+
+  # ── 2. Build application ─────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: tests
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build shared packages
+        run: |
+          npm run build --workspace=packages/shared
+          npm run build --workspace=packages/validation
+          npm run build --workspace=packages/config
+
+      - name: Build API
+        run: npm run build --workspace=apps/api
+
+      - name: Build Web
+        run: npm run build --workspace=apps/web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+
+      - name: Upload web dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-${{ github.sha }}
+          path: apps/web/dist/
+          retention-days: 1
+
+  # ── 3. Build & push Docker images ────────────────────────────────────────────
+  docker-build:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Generate image tag
+        id: meta
+        run: echo "image-tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          load: true
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile.worker
+          push: false
+          load: true
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan — API image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Trivy scan — Worker image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Push API image to ECR
+        run: |
+          docker push ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          docker push ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:latest
+
+      - name: Push Worker image to ECR
+        run: |
+          docker push ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          docker push ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:latest
+
+  # ── 4. Deploy API to ECS ─────────────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API → ECS
+    runs-on: ubuntu-latest
+    needs: docker-build
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Download current API task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ vars.API_TASK_DEFINITION }} \
+            --query taskDefinition \
+            > task-def-api.json
+
+      - name: Render new API task definition
+        id: render-api
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-def-api.json
+          container-name: ${{ vars.API_CONTAINER_NAME }}
+          image: ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_API_REPOSITORY }}:${{ needs.docker-build.outputs.image-tag }}
+
+      - name: Deploy API service to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-api.outputs.task-definition }}
+          service: ${{ vars.ECS_API_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: API health check
+        uses: ./.github/actions/health-check
+        with:
+          url: ${{ vars.API_HEALTH_URL }}
+          timeout-seconds: '120'
+          interval-seconds: '10'
+
+      - name: Verify ECS service is stable
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --services ${{ vars.ECS_API_SERVICE }}
+          echo "✓ ECS API service is stable"
+
+  # ── 5. Deploy Frontend ────────────────────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend → S3 / CloudFront
+    runs-on: ubuntu-latest
+    needs: deploy-api
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Download web dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist-${{ github.sha }}
+          path: apps/web/dist/
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync apps/web/dist/ s3://${{ vars.S3_WEB_BUCKET }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+
+          aws s3 cp apps/web/dist/index.html s3://${{ vars.S3_WEB_BUCKET }}/index.html \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+
+          echo "Waiting for CloudFront invalidation $INVALIDATION_ID…"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --id "$INVALIDATION_ID"
+          echo "✓ CloudFront invalidation complete"
+
+  # ── 6. Deploy Worker to ECS ───────────────────────────────────────────────────
+  deploy-worker:
+    name: Deploy Worker → ECS
+    runs-on: ubuntu-latest
+    needs: docker-build
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Download current Worker task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ vars.WORKER_TASK_DEFINITION }} \
+            --query taskDefinition \
+            > task-def-worker.json
+
+      - name: Render new Worker task definition
+        id: render-worker
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-def-worker.json
+          container-name: ${{ vars.WORKER_CONTAINER_NAME }}
+          image: ${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_WORKER_REPOSITORY }}:${{ needs.docker-build.outputs.image-tag }}
+
+      - name: Deploy Worker service to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-worker.outputs.task-definition }}
+          service: ${{ vars.ECS_WORKER_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
