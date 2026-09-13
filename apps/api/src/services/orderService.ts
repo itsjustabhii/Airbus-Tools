@@ -139,7 +139,7 @@ export class OrderService {
     // Enqueue email and notification jobs — they run in the worker process.
     void Promise.allSettled([
       enqueueEmail({
-        name: 'send-order-confirmation',
+        name: 'send-order-request',
         jobId: newJobId(),
         to: '',          // buyer email resolved in worker via DB lookup
         recipientName: '',
@@ -147,6 +147,8 @@ export class OrderService {
         orderId: order._id.toString(),
         totalAmount: order.totalAmount,
         currency: order.currency,
+        supplierTo: '',  // supplier email resolved in worker via DB lookup
+        supplierName: '',
       }),
       enqueueNotification({
         name: 'create-notification',
@@ -228,17 +230,28 @@ export class OrderService {
 
     // ── Async side-effects (NOT in the HTTP request lifecycle) ────────────────
     void Promise.allSettled([
-      enqueueEmail({
-        name: 'send-order-status-update',
-        jobId: newJobId(),
-        to: '',
-        recipientName: '',
-        orderNumber: order.orderNumber,
-        orderId: orderId,
-        previousStatus: order.status,
-        newStatus: nextStatus,
-        ...(rejectionReason !== undefined ? { rejectionReason } : {}),
-      }),
+      enqueueEmail(
+        nextStatus === 'REJECTED'
+          ? {
+              name: 'send-order-rejected',
+              jobId: newJobId(),
+              to: '',          // buyer email resolved in worker via DB lookup
+              recipientName: '',
+              orderNumber: order.orderNumber,
+              orderId: orderId,
+              rejectionReason: rejectionReason ?? 'No reason provided',
+            }
+          : {
+              name: 'send-order-accepted',
+              jobId: newJobId(),
+              to: '',          // buyer email resolved in worker via DB lookup
+              recipientName: '',
+              orderNumber: order.orderNumber,
+              orderId: orderId,
+              totalAmount: order.totalAmount,
+              currency: order.currency,
+            },
+      ),
       // Notify both parties of the status change
       enqueueNotification({
         name: 'create-notification',

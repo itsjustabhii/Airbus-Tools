@@ -22,10 +22,84 @@ export interface BaseJobData {
 // ── Email queue ───────────────────────────────────────────────────────────────
 
 export type EmailJobName =
+  | 'send-welcome'
+  | 'send-order-request'
+  | 'send-order-accepted'
+  | 'send-order-rejected'
+  | 'send-payment-confirmation'
+  | 'send-password-changed'
+  | 'send-notification'
+  // Legacy names — kept for backward-compat during rollout
   | 'send-order-confirmation'
   | 'send-order-status-update'
   | 'send-payment-receipt'
   | 'send-reminder';
+
+// ── New typed payloads ────────────────────────────────────────────────────────
+
+export interface SendWelcomeData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  userId: string;
+}
+
+export interface SendOrderRequestData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  orderNumber: string;
+  orderId: string;
+  totalAmount: number;
+  currency: string;
+  /** Supplier's email — also notified of the new incoming order. */
+  supplierTo: string;
+  supplierName: string;
+}
+
+export interface SendOrderAcceptedData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  orderNumber: string;
+  orderId: string;
+  totalAmount: number;
+  currency: string;
+}
+
+export interface SendOrderRejectedData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  orderNumber: string;
+  orderId: string;
+  rejectionReason: string;
+}
+
+export interface SendPaymentConfirmationData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  paymentNumber: string;
+  paymentId: string;
+  orderId: string;
+  orderNumber: string;
+  amount: number;
+  currency: string;
+}
+
+export interface SendPasswordChangedData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  userId: string;
+  changedAt: string; // ISO-8601
+}
+
+export interface SendNotificationEmailData extends BaseJobData {
+  to: string;
+  recipientName: string;
+  subject: string;
+  message: string;
+  referenceType?: 'order' | 'payment' | 'product' | 'system';
+  referenceId?: string;
+}
+
+// ── Legacy payloads (Phase-8 — kept until callers are migrated) ───────────────
 
 export interface SendOrderConfirmationData extends BaseJobData {
   to: string;
@@ -66,6 +140,15 @@ export interface SendReminderData extends BaseJobData {
 }
 
 export type EmailJobData =
+  // ── Phase-9 types ──────────────────────────────────────────────────────────
+  | ({ name: 'send-welcome' } & SendWelcomeData)
+  | ({ name: 'send-order-request' } & SendOrderRequestData)
+  | ({ name: 'send-order-accepted' } & SendOrderAcceptedData)
+  | ({ name: 'send-order-rejected' } & SendOrderRejectedData)
+  | ({ name: 'send-payment-confirmation' } & SendPaymentConfirmationData)
+  | ({ name: 'send-password-changed' } & SendPasswordChangedData)
+  | ({ name: 'send-notification' } & SendNotificationEmailData)
+  // ── Legacy Phase-8 types ───────────────────────────────────────────────────
   | ({ name: 'send-order-confirmation' } & SendOrderConfirmationData)
   | ({ name: 'send-order-status-update' } & SendOrderStatusUpdateData)
   | ({ name: 'send-payment-receipt' } & SendPaymentReceiptData)

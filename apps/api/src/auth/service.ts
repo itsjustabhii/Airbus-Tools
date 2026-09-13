@@ -4,6 +4,7 @@ import { UserStatus } from '@airbus-tools/shared';
 
 import { ConflictError, NotFoundError, UnauthorizedError } from '../core/errors';
 import { userRepository } from '../database/repositories/UserRepository';
+import { enqueueEmail, newJobId } from '../jobs/queues';
 import { signToken } from './jwt';
 import type { RegisterInput, LoginInput, ChangePasswordInput } from './schemas';
 
@@ -44,6 +45,15 @@ export async function registerUser(input: RegisterInput) {
   const user = await userRepository.create(createData);
 
   const token = signToken({ sub: String(user._id), email: user.email, role: user.role });
+
+  // Enqueue welcome email — fire-and-forget, does NOT block the response.
+  void enqueueEmail({
+    name: 'send-welcome',
+    jobId: newJobId(),
+    to: user.email,
+    recipientName: user.firstName,
+    userId: String(user._id),
+  });
 
   return { token, user: sanitizeUser(user) };
 }
@@ -93,4 +103,14 @@ export async function changePassword(userId: string, input: ChangePasswordInput)
 
   const newHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
   await userRepository.updateById(userId, { passwordHash: newHash });
+
+  // Enqueue password-changed notification — fire-and-forget.
+  void enqueueEmail({
+    name: 'send-password-changed',
+    jobId: newJobId(),
+    to: user.email,
+    recipientName: user.firstName,
+    userId: userId,
+    changedAt: new Date().toISOString(),
+  });
 }
