@@ -1,3 +1,14 @@
+###############################################################################
+# Pull-Request Pipeline
+#
+# Triggered on every push to main/develop and every PR targeting those branches.
+# Steps (sequential gates — each job depends on the previous):
+#   checkout → install → lint → typecheck → unit tests → integration tests
+#   → build → security checks
+#
+# AWS credentials are NOT used in this pipeline.
+###############################################################################
+
 name: CI
 
 on:
@@ -6,31 +17,51 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Cancel in-flight runs for the same ref so a force-push doesn't pile up jobs.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '20'
+
 jobs:
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  # ── 1. Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
+      - name: ESLint
         run: npm run lint
 
-      - name: Typecheck (packages)
-        run: npm run typecheck --workspace=packages/shared --workspace=packages/validation --workspace=packages/config
+      - name: Prettier check
+        run: npm run format:check
+
+  # ── 2. Typecheck ─────────────────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Typecheck (shared packages)
+        run: |
+          npm run typecheck --workspace=packages/shared
+          npm run typecheck --workspace=packages/validation
+          npm run typecheck --workspace=packages/config
 
       - name: Typecheck (api)
         run: npm run typecheck --workspace=apps/api
@@ -38,45 +69,86 @@ jobs:
       - name: Typecheck (web)
         run: npm run typecheck --workspace=apps/web
 
-  test:
-    name: Tests
+  # ── 3. Unit tests ────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
-    needs: lint-and-typecheck
+    needs: typecheck
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Run unit tests (api)
+        run: npm run test --workspace=apps/api
+        env:
+          NODE_ENV: test
 
-      - name: Test (api)
-        run: npm test --workspace=apps/api
+      - name: Run unit tests (web)
+        run: npm run test --workspace=apps/web
+        env:
+          NODE_ENV: test
 
-      - name: Test (web)
-        run: npm test --workspace=apps/web
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: |
+            apps/api/coverage/
+            apps/web/coverage/
+          retention-days: 7
 
+  # ── 4. Integration tests ─────────────────────────────────────────────────────
+  #
+  # Runs after unit tests. MongoDB Memory Server and a local Redis are spun up
+  # inside the runner so no external services are needed.
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run integration tests (api)
+        run: npm run test --workspace=apps/api
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+
+  # ── 5. Build ─────────────────────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: lint-and-typecheck
+    needs: integration-tests
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build packages
+      - name: Build shared packages
         run: |
           npm run build --workspace=packages/shared
           npm run build --workspace=packages/validation
@@ -87,3 +159,75 @@ jobs:
 
       - name: Build Web
         run: npm run build --workspace=apps/web
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-${{ github.sha }}
+          path: apps/web/dist/
+          retention-days: 1
+
+  # ── 6. Security checks ────────────────────────────────────────────────────────
+  #
+  # npm audit catches known CVEs in production dependencies.
+  # Trivy scans the built Docker images without pushing them.
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: npm audit (production dependencies only)
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Build API Docker image (local, not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: airbus-tools/api:pr-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Worker Docker image (local, not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile.worker
+          push: false
+          tags: airbus-tools/worker:pr-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy vulnerability scan — API image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: airbus-tools/api:pr-scan
+          format: sarif
+          output: trivy-api.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Trivy vulnerability scan — Worker image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: airbus-tools/worker:pr-scan
+          format: sarif
+          output: trivy-worker.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Upload Trivy SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: |
+            trivy-api.sarif
+            trivy-worker.sarif

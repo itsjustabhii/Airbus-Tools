@@ -1,0 +1,47 @@
+name: 'ECS health check'
+description: 'Poll an HTTPS endpoint until it returns HTTP 200, or fail after a timeout.'
+
+inputs:
+  url:
+    description: 'Full URL to poll (e.g. https://api.example.com/health)'
+    required: true
+  timeout-seconds:
+    description: 'Maximum seconds to wait before failing'
+    required: false
+    default: '120'
+  interval-seconds:
+    description: 'Seconds between each poll attempt'
+    required: false
+    default: '10'
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for healthy response
+      shell: bash
+      run: |
+        URL="${{ inputs.url }}"
+        TIMEOUT="${{ inputs.timeout-seconds }}"
+        INTERVAL="${{ inputs.interval-seconds }}"
+        ELAPSED=0
+
+        echo "Polling $URL (timeout: ${TIMEOUT}s, interval: ${INTERVAL}s)"
+
+        while true; do
+          STATUS=$(curl --silent --max-time 5 --write-out '%{http_code}' --output /dev/null "$URL" || true)
+
+          if [ "$STATUS" = "200" ]; then
+            echo "✓ Health check passed (HTTP $STATUS) after ${ELAPSED}s"
+            exit 0
+          fi
+
+          echo "  HTTP $STATUS — waiting ${INTERVAL}s… (${ELAPSED}/${TIMEOUT}s elapsed)"
+
+          if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+            echo "✗ Health check timed out after ${TIMEOUT}s (last status: HTTP $STATUS)"
+            exit 1
+          fi
+
+          sleep "$INTERVAL"
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
