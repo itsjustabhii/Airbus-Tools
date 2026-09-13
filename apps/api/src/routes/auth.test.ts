@@ -189,7 +189,7 @@ describe('POST /api/v1/auth/logout', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.message).toBe('Logged out successfully');
 
-    const setCookieHeader = res.headers['set-cookie'] as string[] | undefined;
+    const setCookieHeader = res.headers['set-cookie'] as unknown as string[] | undefined;
     expect(setCookieHeader?.some((c) => c.includes(`${AUTH_COOKIE_NAME}=;`))).toBe(true);
   });
 
