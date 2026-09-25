@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Product } from '@airbus-tools/shared';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 import { recommendationsApi } from '../api/recommendationsApi';
 
 export type FeedStatus = 'idle' | 'loading' | 'error' | 'end';

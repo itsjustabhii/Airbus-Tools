@@ -9,7 +9,7 @@
  * This module parses `REDIS_URL` (if present) into those options and exports
  * a single shared connection configuration for all queues and workers.
  */
-import { ConnectionOptions } from 'bullmq';
+import type { ConnectionOptions } from 'bullmq';
 
 import { config } from '../config/env';
 import { logger } from '../core/logger';

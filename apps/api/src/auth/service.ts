@@ -1,10 +1,11 @@
+import { UserStatus } from '@airbus-tools/shared';
 import bcrypt from 'bcrypt';
 
-import { UserStatus } from '@airbus-tools/shared';
 
 import { ConflictError, NotFoundError, UnauthorizedError } from '../core/errors';
 import { userRepository } from '../database/repositories/UserRepository';
 import { enqueueEmail, newJobId } from '../jobs/queues';
+
 import { signToken } from './jwt';
 import type { RegisterInput, LoginInput, ChangePasswordInput } from './schemas';
 

@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { InteractionModel } from '../database/models/Interaction';
 import { ProductModel } from '../database/models/Product';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../database/test-utils';
+
 import { interactionService } from './interactionService';
 import {
   recommendationService,
@@ -184,20 +185,20 @@ describe('RecommendationService — $nin exclusion & cursor pagination', () => {
       userId,
       type: InteractionType.VIEW,
       entityType: 'PRODUCT',
-      entityId: products[0]!._id.toString(),
+      entityId: products[0]._id.toString(),
     });
     await InteractionModel.create({
       userId,
       type: InteractionType.RFQ,
       entityType: 'PRODUCT',
-      entityId: products[1]!._id.toString(),
+      entityId: products[1]._id.toString(),
     });
 
     const result = await recommendationService.getRecommendations({ userId });
 
     const returnedIds = result.items.map((p) => p._id.toString());
-    expect(returnedIds).not.toContain(products[0]!._id.toString());
-    expect(returnedIds).not.toContain(products[1]!._id.toString());
+    expect(returnedIds).not.toContain(products[0]._id.toString());
+    expect(returnedIds).not.toContain(products[1]._id.toString());
     expect(returnedIds).toHaveLength(3);
   });
 
@@ -232,7 +233,7 @@ describe('RecommendationService — $nin exclusion & cursor pagination', () => {
 
     const result = await recommendationService.getRecommendations({});
     expect(result.items).toHaveLength(1);
-    expect(result.items[0]!.partNumber).toBe('ACT-001');
+    expect(result.items[0].partNumber).toBe('ACT-001');
   });
 
   it('cursor pagination: first page returns nextCursor, second page returns remaining items', async () => {
@@ -274,7 +275,7 @@ describe('RecommendationService — $nin exclusion & cursor pagination', () => {
 
   it('ranking: product with more views ranked higher than product with no views', async () => {
     const products = await seedProducts(2);
-    const popularId = products[0]!._id.toString();
+    const popularId = products[0]._id.toString();
 
     // Give product[0] 10 views (use valid ObjectIds for userId)
     await Promise.all(
@@ -290,7 +291,7 @@ describe('RecommendationService — $nin exclusion & cursor pagination', () => {
 
     // Both created at same time so recency is equal; popularity decides rank
     const result = await recommendationService.getRecommendations({});
-    expect(result.items[0]!._id.toString()).toBe(popularId);
+    expect(result.items[0]._id.toString()).toBe(popularId);
   });
 
   it('uses a malformed cursor gracefully (starts from beginning)', async () => {

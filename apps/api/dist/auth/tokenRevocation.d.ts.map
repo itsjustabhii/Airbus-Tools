@@ -1,0 +1,1 @@
+{"version":3,"file":"tokenRevocation.d.ts","sourceRoot":"","sources":["../../src/auth/tokenRevocation.ts"],"names":[],"mappings":"AA2CA;;;;GAIG;AACH,wBAAsB,WAAW,CAAC,GAAG,EAAE,MAAM,EAAE,UAAU,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC,CAQhF;AAED;;GAEG;AACH,wBAAsB,cAAc,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO,CAAC,OAAO,CAAC,CAUlE;AAED,wBAAsB,qBAAqB,IAAI,OAAO,CAAC,IAAI,CAAC,CAU3D"}

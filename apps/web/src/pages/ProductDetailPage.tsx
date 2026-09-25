@@ -1,6 +1,7 @@
+import type { Product } from '@airbus-tools/shared';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import type { Product } from '@airbus-tools/shared';
+
 import { productsApi } from '../api/productsApi';
 
 const CATEGORY_LABELS: Record<string, string> = {

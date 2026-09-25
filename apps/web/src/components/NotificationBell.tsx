@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { NotificationType, type Notification } from '@airbus-tools/shared';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 import { notificationsApi } from '../api/notificationsApi';
 
 export interface NotificationBellProps {

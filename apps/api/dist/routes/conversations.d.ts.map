@@ -1,1 +1,1 @@
-{"version":3,"file":"conversations.d.ts","sourceRoot":"","sources":["../../src/routes/conversations.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,MAAM,EAAmC,MAAM,SAAS,CAAC;AAWvE,QAAA,MAAM,MAAM,EAAE,MAAuB,CAAC;AA2JtC,OAAO,EAAE,MAAM,IAAI,mBAAmB,EAAE,CAAC"}
+{"version":3,"file":"conversations.d.ts","sourceRoot":"","sources":["../../src/routes/conversations.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,MAAM,EAAmC,MAAM,SAAS,CAAC;AAYvE,QAAA,MAAM,MAAM,EAAE,MAAuB,CAAC;AAuKtC,OAAO,EAAE,MAAM,IAAI,mBAAmB,EAAE,CAAC"}

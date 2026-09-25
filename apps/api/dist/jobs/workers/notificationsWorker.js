@@ -34,8 +34,22 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createNotificationsWorker = createNotificationsWorker;
-const bullmq_1 = require("bullmq");
+/**
+ * Notifications queue worker.
+ *
+ * Responsibilities:
+ * 1. `create-notification` — persist a Notification document in MongoDB.
+ *    When `pushViaSocket` is true the handler also emits a real-time event
+ *    via Socket.io (if the Socket.io server is running in this process).
+ * 2. `broadcast-system-alert` — create Notification documents for a list of
+ *    users (or all active users) and push real-time alerts.
+ *
+ * Idempotency: the job's `jobId` is stored in `notification.metadata.jobId`.
+ * Before persisting, we query for an existing notification with that jobId to
+ * avoid duplicates on retries.
+ */
 const shared_1 = require("@airbus-tools/shared");
+const bullmq_1 = require("bullmq");
 const logger_1 = require("../../core/logger");
 const Notification_1 = require("../../database/models/Notification");
 const User_1 = require("../../database/models/User");

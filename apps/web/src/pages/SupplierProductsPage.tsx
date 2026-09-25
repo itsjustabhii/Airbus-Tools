@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import type { Product } from '@airbus-tools/shared';
 import { ProductCategory, ProductCondition, ProductStatus } from '@airbus-tools/shared';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+
 import {
   productsApi,
   type CreateProductPayload,

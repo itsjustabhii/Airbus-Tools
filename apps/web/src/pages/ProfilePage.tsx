@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { profileApi, type UserProfile } from '../api/profileApi';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

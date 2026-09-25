@@ -1,7 +1,7 @@
+import { UserStatus, UserRole } from '@airbus-tools/shared';
 import bcrypt from 'bcrypt';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { UserStatus, UserRole } from '@airbus-tools/shared';
 
 import { ConflictError, UnauthorizedError, NotFoundError } from '../core/errors';
 
@@ -22,8 +22,9 @@ vi.mock('./jwt', () => ({
 }));
 
 // Import after mocks so the service picks up the mocked dependencies
-import { registerUser, loginUser, getMe, changePassword } from './service';
 import { userRepository as mockRepo } from '../database/repositories/UserRepository';
+
+import { registerUser, loginUser, getMe, changePassword } from './service';
 
 const mockUserRepo = mockRepo as {
   emailExists: ReturnType<typeof vi.fn>;

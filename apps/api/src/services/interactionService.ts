@@ -13,8 +13,8 @@
 
 import { InteractionType } from '@airbus-tools/shared';
 
-import { interactionRepository } from '../database/repositories/InteractionRepository';
 import type { IInteractionDocument } from '../database/models/Interaction';
+import { interactionRepository } from '../database/repositories/InteractionRepository';
 
 export interface RecordInteractionOptions {
   userId?: string;

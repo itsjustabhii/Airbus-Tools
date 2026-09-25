@@ -13,6 +13,7 @@
  *  - GET /payments/:id scoping
  */
 
+import { OrderStatus, PaymentMethod, PaymentStatus, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
 import bcrypt from 'bcrypt';
 import supertest from 'supertest';
 import {
@@ -20,15 +21,14 @@ import {
   beforeAll, afterAll, beforeEach, afterEach,
 } from 'vitest';
 
-import { OrderStatus, PaymentMethod, PaymentStatus, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
 
 import { createApp } from '../app';
 import { signToken } from '../auth/jwt';
 import { AUTH_COOKIE_NAME } from '../auth/service';
-import { UserModel } from '../database/models/User';
-import { ProductModel } from '../database/models/Product';
 import { OrderModel } from '../database/models/Order';
 import { PaymentModel } from '../database/models/Payment';
+import { ProductModel } from '../database/models/Product';
+import { UserModel } from '../database/models/User';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../database/test-utils';
 import { MockPaymentProvider } from '../services/payment/MockPaymentProvider';
 

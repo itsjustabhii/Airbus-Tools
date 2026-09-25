@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.conversationsRouter = void 0;
-const express_1 = require("express");
 const shared_1 = require("@airbus-tools/shared");
+const express_1 = require("express");
+const mongoose_1 = require("mongoose");
+const zod_1 = require("zod");
 const errors_1 = require("../core/errors");
 const response_1 = require("../core/response");
 const ConversationRepository_1 = require("../database/repositories/ConversationRepository");
@@ -42,15 +44,22 @@ router.get('/', (req, res, next) => {
  * POST /api/v1/conversations
  * Find or create a direct conversation with another user.
  */
+const createConversationSchema = zod_1.z.object({
+    recipientId: zod_1.z
+        .string()
+        .trim()
+        .regex(/^[0-9a-fA-F]{24}$/, 'recipientId must be a valid 24-character ObjectId'),
+});
 router.post('/', (req, res, next) => {
     void (async () => {
         try {
             const userId = req.user.sub;
-            const { recipientId } = req.body;
-            if (!recipientId) {
-                res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'recipientId is required' } });
+            const parseResult = createConversationSchema.safeParse(req.body);
+            if (!parseResult.success) {
+                res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: parseResult.error.errors[0]?.message ?? 'Invalid input' } });
                 return;
             }
+            const { recipientId } = parseResult.data;
             if (recipientId === userId) {
                 res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Cannot start a conversation with yourself' } });
                 return;
@@ -59,7 +68,10 @@ router.post('/', (req, res, next) => {
             if (!conversation) {
                 conversation = await ConversationRepository_1.conversationRepository.create({
                     type: shared_1.ConversationType.DIRECT,
-                    participants: [{ userId }, { userId: recipientId }],
+                    participants: [
+                        { userId: new mongoose_1.Types.ObjectId(userId) },
+                        { userId: new mongoose_1.Types.ObjectId(recipientId) },
+                    ],
                 });
             }
             res.status(200).json((0, response_1.successResponse)({
@@ -80,7 +92,9 @@ router.get('/:id/messages', (req, res, next) => {
     void (async () => {
         try {
             const userId = req.user.sub;
-            const conversationId = req.params.id;
+            const conversationId = req.params['id'];
+            if (!conversationId)
+                throw new errors_1.NotFoundError('Conversation not found');
             const { limit, before, since } = req.query;
             // Authorize
             const conversation = await ConversationRepository_1.conversationRepository.findById(conversationId);
@@ -93,17 +107,16 @@ router.get('/:id/messages', (req, res, next) => {
             }
             const query = { conversationId };
             if (before || since) {
-                query.createdAt = {};
+                const dateCriteria = {};
                 if (before)
-                    query.createdAt.$lt = new Date(before);
+                    dateCriteria.$lt = new Date(before);
                 if (since)
-                    query.createdAt.$gt = new Date(since);
+                    dateCriteria.$gt = new Date(since);
+                query.createdAt = dateCriteria;
             }
-            const messages = await MessageRepository_1.messageRepository.model
-                .find(query)
-                .sort({ createdAt: 1 })
-                .limit(limit ? parseInt(limit, 10) : 50)
-                .exec();
+            // Cap at 100 to prevent memory exhaustion via caller-controlled limit
+            const parsedLimit = limit ? Math.min(parseInt(limit, 10), 100) : 50;
+            const messages = await MessageRepository_1.messageRepository.findRaw(query, parsedLimit);
             res.status(200).json((0, response_1.successResponse)({ messages: messages.map((m) => m.toJSON()) }));
         }
         catch (err) {
@@ -119,7 +132,9 @@ router.post('/:id/read', (req, res, next) => {
     void (async () => {
         try {
             const userId = req.user.sub;
-            const conversationId = req.params.id;
+            const conversationId = req.params['id'];
+            if (!conversationId)
+                throw new errors_1.NotFoundError('Conversation not found');
             // Authorize
             const conversation = await ConversationRepository_1.conversationRepository.findById(conversationId);
             if (!conversation) {

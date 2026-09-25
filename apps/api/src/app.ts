@@ -4,19 +4,19 @@ import express, { type Application } from 'express';
 import helmet from 'helmet';
 
 import { config } from './config/env';
-import { errorHandler } from './middlewares/errorHandler';
 import { csrfProtection } from './middlewares/csrf';
-import { requestIdMiddleware } from './middlewares/requestId';
+import { errorHandler } from './middlewares/errorHandler';
 import { generalRateLimiter } from './middlewares/rateLimiter';
+import { requestIdMiddleware } from './middlewares/requestId';
 import { authRouter } from './routes/auth';
-import { healthRouter } from './routes/health';
 import { conversationsRouter } from './routes/conversations';
+import { healthRouter } from './routes/health';
+import { notificationsRouter } from './routes/notifications';
 import { ordersRouter } from './routes/orders';
+import { paymentsRouter } from './routes/payments';
 import { productsRouter } from './routes/products';
 import { profileRouter } from './routes/profile';
-import { notificationsRouter } from './routes/notifications';
 import { recommendationsRouter } from './routes/recommendations';
-import { paymentsRouter } from './routes/payments';
 import { uploadRouter } from './routes/upload';
 
 export function createApp(): Application {

@@ -15,11 +15,10 @@
  * registered in app.ts BEFORE `express.json()`, OR the webhook route must
  * use its own raw parser as done here.
  */
-import type { Router, Request, Response, NextFunction } from 'express';
-import { Router as createRouter } from 'express';
-import express from 'express';
-
 import { UserRole } from '@airbus-tools/shared';
+import type { Router, Request, Response, NextFunction } from 'express';
+import express, { Router as createRouter } from 'express';
+
 
 import { successResponse } from '../core/response';
 import { authenticate } from '../middlewares/authenticate';

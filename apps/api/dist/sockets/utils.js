@@ -29,7 +29,12 @@ function generateRoomId(userId1, userId2) {
  */
 function getConversationRoomId(conversation) {
     if (conversation.type === shared_1.ConversationType.DIRECT && conversation.participants.length === 2) {
-        return generateRoomId(String(conversation.participants[0].userId), String(conversation.participants[1].userId));
+        const p0 = conversation.participants[0];
+        const p1 = conversation.participants[1];
+        if (!p0 || !p1) {
+            throw new Error('Direct conversation must have exactly two participants');
+        }
+        return generateRoomId(String(p0.userId), String(p1.userId));
     }
     const idStr = conversation.id || (conversation._id ? String(conversation._id) : undefined);
     if (!idStr) {

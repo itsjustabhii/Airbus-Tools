@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.orderService = exports.OrderService = void 0;
-const uuid_1 = require("uuid");
 const shared_1 = require("@airbus-tools/shared");
+const uuid_1 = require("uuid");
 const errors_1 = require("../core/errors");
 const Order_1 = require("../database/models/Order");
 const Product_1 = require("../database/models/Product");
@@ -85,7 +85,7 @@ class OrderService {
             tax,
             shippingFee,
             totalAmount,
-            currency: orderItems[0].currency,
+            currency: orderItems[0]?.currency ?? 'USD',
             shippingAddress,
             ...(notes !== undefined ? { notes } : {}),
             placedAt: now,
@@ -120,7 +120,7 @@ class OrderService {
             (0, queues_1.enqueueNotification)({
                 name: 'create-notification',
                 jobId: (0, queues_1.newJobId)(),
-                userId: sellerId,
+                userId: sellerId ?? '',
                 type: shared_1.NotificationType.ORDER_UPDATE,
                 title: 'New Order Received',
                 message: `You have received a new order ${order.orderNumber}. Please review and accept or reject it.`,

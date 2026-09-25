@@ -7,6 +7,7 @@ import { NotFoundError } from '../core/errors';
 import { successResponse } from '../core/response';
 import { userRepository } from '../database/repositories/UserRepository';
 import { authenticate } from '../middlewares/authenticate';
+
 import { updateProfileSchema } from './profile.schemas';
 
 const router: Router = createRouter();

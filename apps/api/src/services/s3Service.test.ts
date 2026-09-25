@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
+
+import { ValidationError } from '../core/errors';
+
 import {
   generateSafeObjectKey,
   createPresignedUploadUrl,
   ALLOWED_IMAGE_TYPES,
   MAX_FILE_SIZE_BYTES,
 } from './s3Service';
-import { ValidationError } from '../core/errors';
 
 describe('S3 Upload Service', () => {
   const mockUserId = 'user-12345678-abcd-ef00-1122-334455667788';

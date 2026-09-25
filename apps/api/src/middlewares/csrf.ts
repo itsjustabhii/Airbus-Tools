@@ -18,6 +18,7 @@
  *   - Auth login/register (pre-session — no CSRF cookie exists yet)
  */
 import { timingSafeEqual, randomBytes } from 'crypto';
+
 import type { Request, Response, NextFunction } from 'express';
 
 export const CSRF_COOKIE_NAME = 'csrf_token';

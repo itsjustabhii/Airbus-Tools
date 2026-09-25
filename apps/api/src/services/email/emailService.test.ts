@@ -13,8 +13,6 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { EmailService, processedJobIds } from './EmailService';
-import { MockEmailAdapter } from './MockEmailAdapter';
 import type {
   SendWelcomeData,
   SendOrderRequestData,
@@ -24,6 +22,9 @@ import type {
   SendPasswordChangedData,
   SendNotificationEmailData,
 } from '../../jobs/types';
+
+import { EmailService, processedJobIds } from './EmailService';
+import { MockEmailAdapter } from './MockEmailAdapter';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,13 +53,13 @@ describe('send-welcome', () => {
   it('sends a welcome email with the correct subject', async () => {
     await service.send(data);
     expect(mock.sent).toHaveLength(1);
-    expect(mock.sent[0]!.to).toBe('jane@airline.com');
-    expect(mock.sent[0]!.subject).toContain('Welcome');
+    expect(mock.sent[0].to).toBe('jane@airline.com');
+    expect(mock.sent[0].subject).toContain('Welcome');
   });
 
   it('includes recipient name in the HTML body', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('Jane');
+    expect(mock.sent[0].html).toContain('Jane');
   });
 });
 
@@ -81,12 +82,12 @@ describe('send-order-request', () => {
   it('sends to the buyer with the order number in the subject', async () => {
     await service.send(data);
     expect(mock.sent).toHaveLength(1);
-    expect(mock.sent[0]!.subject).toContain('ORD-2024-ABCD1234');
+    expect(mock.sent[0].subject).toContain('ORD-2024-ABCD1234');
   });
 
   it('includes total amount in the HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('15000.00');
+    expect(mock.sent[0].html).toContain('15000.00');
   });
 });
 
@@ -106,13 +107,13 @@ describe('send-order-accepted', () => {
 
   it('sends with an "Accepted" subject', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.subject).toContain('Accepted');
-    expect(mock.sent[0]!.subject).toContain('ORD-2024-ABCD1234');
+    expect(mock.sent[0].subject).toContain('Accepted');
+    expect(mock.sent[0].subject).toContain('ORD-2024-ABCD1234');
   });
 
   it('HTML body contains the "Accepted" badge', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html.toLowerCase()).toContain('accepted');
+    expect(mock.sent[0].html.toLowerCase()).toContain('accepted');
   });
 });
 
@@ -131,17 +132,17 @@ describe('send-order-rejected', () => {
 
   it('sends with a "Rejected" subject', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.subject).toContain('Rejected');
+    expect(mock.sent[0].subject).toContain('Rejected');
   });
 
   it('includes rejection reason in HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('Part unavailable');
+    expect(mock.sent[0].html).toContain('Part unavailable');
   });
 
   it('includes rejection reason in plain text', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.text).toContain('Part unavailable');
+    expect(mock.sent[0].text).toContain('Part unavailable');
   });
 });
 
@@ -163,13 +164,13 @@ describe('send-payment-confirmation', () => {
 
   it('sends with payment number in the subject', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.subject).toContain('PAY-2024-XYZ');
+    expect(mock.sent[0].subject).toContain('PAY-2024-XYZ');
   });
 
   it('includes order number and amount in HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('ORD-2024-ABCD1234');
-    expect(mock.sent[0]!.html).toContain('15000.00');
+    expect(mock.sent[0].html).toContain('ORD-2024-ABCD1234');
+    expect(mock.sent[0].html).toContain('15000.00');
   });
 });
 
@@ -187,12 +188,12 @@ describe('send-password-changed', () => {
 
   it('sends with "Password" in the subject', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.subject.toLowerCase()).toContain('password');
+    expect(mock.sent[0].subject.toLowerCase()).toContain('password');
   });
 
   it('includes changedAt timestamp in HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('2024-06-01T12:00:00.000Z');
+    expect(mock.sent[0].html).toContain('2024-06-01T12:00:00.000Z');
   });
 });
 
@@ -212,17 +213,17 @@ describe('send-notification', () => {
 
   it('uses the provided subject', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.subject).toBe('Important system update');
+    expect(mock.sent[0].subject).toBe('Important system update');
   });
 
   it('includes the message text in the HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('Maintenance window scheduled for midnight');
+    expect(mock.sent[0].html).toContain('Maintenance window scheduled for midnight');
   });
 
   it('includes reference metadata in HTML', async () => {
     await service.send(data);
-    expect(mock.sent[0]!.html).toContain('maint-42');
+    expect(mock.sent[0].html).toContain('maint-42');
   });
 });
 
@@ -265,7 +266,7 @@ describe('adapter contract', () => {
       recipientName: 'X',
       userId: 'u1',
     });
-    expect(mock.sent[0]!.idempotencyKey).toBe('idem-key-abc');
+    expect(mock.sent[0].idempotencyKey).toBe('idem-key-abc');
   });
 
   it('always sets a from address', async () => {
@@ -276,7 +277,7 @@ describe('adapter contract', () => {
       recipientName: 'X',
       userId: 'u1',
     });
-    expect(mock.sent[0]!.from).toBeTruthy();
+    expect(mock.sent[0].from).toBeTruthy();
   });
 
   it('html and text are both populated', async () => {
@@ -287,7 +288,7 @@ describe('adapter contract', () => {
       recipientName: 'X',
       userId: 'u1',
     });
-    expect(mock.sent[0]!.html.length).toBeGreaterThan(50);
-    expect(mock.sent[0]!.text.length).toBeGreaterThan(10);
+    expect(mock.sent[0].html.length).toBeGreaterThan(50);
+    expect(mock.sent[0].text.length).toBeGreaterThan(10);
   });
 });

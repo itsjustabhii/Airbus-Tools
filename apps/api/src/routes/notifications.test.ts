@@ -1,8 +1,8 @@
+import { NotificationType, UserRole, UserStatus } from '@airbus-tools/shared';
 import bcrypt from 'bcrypt';
 import supertest from 'supertest';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { NotificationType, UserRole, UserStatus } from '@airbus-tools/shared';
 
 import { createApp } from '../app';
 import { signToken } from '../auth/jwt';

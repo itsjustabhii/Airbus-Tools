@@ -4,6 +4,7 @@ import { Router as createRouter } from 'express';
 import { successResponse } from '../core/response';
 import { authenticate } from '../middlewares/authenticate';
 import { createPresignedUploadUrl } from '../services/s3Service';
+
 import { presignedUrlSchema } from './profile.schemas';
 
 const router: Router = createRouter();

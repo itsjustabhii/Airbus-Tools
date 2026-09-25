@@ -1,4 +1,5 @@
 import type { Product, ProductCategory, ProductCondition, ProductStatus } from '@airbus-tools/shared';
+
 import { apiClient } from './profileApi';
 
 // ── Shared response shapes ────────────────────────────────────────────────────

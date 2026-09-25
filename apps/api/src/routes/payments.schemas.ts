@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { PaymentMethod } from '@airbus-tools/shared';
+import { z } from 'zod';
 
 // ── POST /payments ────────────────────────────────────────────────────────────
 

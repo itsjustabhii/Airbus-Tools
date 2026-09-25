@@ -23,8 +23,8 @@ router.get('/', (req, res, next) => {
             const query = recommendations_schemas_1.getRecommendationsQuerySchema.parse(req.query);
             const userId = req.user?.sub;
             const result = await recommendationService_1.recommendationService.getRecommendations({
-                userId,
-                cursor: query.cursor,
+                ...(userId !== undefined && { userId }),
+                ...(query.cursor !== undefined && { cursor: query.cursor }),
                 limit: query.limit,
             });
             const meta = {
@@ -54,8 +54,8 @@ router.post('/interactions', authenticate_1.authenticate, (req, res, next) => {
             const userAgent = req.headers['user-agent'];
             const opts = {
                 userId,
-                ipAddress,
-                userAgent,
+                ...(ipAddress !== undefined && { ipAddress }),
+                ...(userAgent !== undefined && { userAgent }),
             };
             let interaction;
             switch (body.type) {

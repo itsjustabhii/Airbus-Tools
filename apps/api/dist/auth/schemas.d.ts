@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { UserRole } from '@airbus-tools/shared';
+import { z } from 'zod';
 export declare const registerSchema: z.ZodObject<{
     email: z.ZodString;
     password: z.ZodString;
@@ -8,29 +8,29 @@ export declare const registerSchema: z.ZodObject<{
     role: z.ZodEnum<[UserRole.AIRLINE, UserRole.SUPPLIER]>;
     phoneNumber: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    password: string;
     email: string;
     firstName: string;
     lastName: string;
     role: UserRole.AIRLINE | UserRole.SUPPLIER;
-    password: string;
     phoneNumber?: string | undefined;
 }, {
+    password: string;
     email: string;
     firstName: string;
     lastName: string;
     role: UserRole.AIRLINE | UserRole.SUPPLIER;
-    password: string;
     phoneNumber?: string | undefined;
 }>;
 export declare const loginSchema: z.ZodObject<{
     email: z.ZodString;
     password: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    email: string;
     password: string;
+    email: string;
 }, {
-    email: string;
     password: string;
+    email: string;
 }>;
 export declare const changePasswordSchema: z.ZodObject<{
     currentPassword: z.ZodString;

@@ -1,8 +1,10 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProfilePage } from './ProfilePage';
+
 import { profileApi } from '../api/profileApi';
+
+import { ProfilePage } from './ProfilePage';
 
 vi.mock('../api/profileApi', () => ({
   profileApi: {

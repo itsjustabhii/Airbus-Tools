@@ -18,8 +18,8 @@ exports.teardownScheduledJobs = teardownScheduledJobs;
  * IMPORTANT: Scheduler setup must run inside the worker process, NOT inside the
  * HTTP server process, so that jobs are not enqueued from request handlers.
  */
-const uuid_1 = require("uuid");
 const shared_1 = require("@airbus-tools/shared");
+const uuid_1 = require("uuid");
 const logger_1 = require("../core/logger");
 const queues_1 = require("./queues");
 const SCHEDULED_JOBS = [

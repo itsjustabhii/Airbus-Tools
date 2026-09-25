@@ -9,6 +9,6 @@
  * This module parses `REDIS_URL` (if present) into those options and exports
  * a single shared connection configuration for all queues and workers.
  */
-import { ConnectionOptions } from 'bullmq';
+import type { ConnectionOptions } from 'bullmq';
 export declare const bullMQConnection: ConnectionOptions;
 //# sourceMappingURL=redis.d.ts.map

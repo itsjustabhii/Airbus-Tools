@@ -8,7 +8,7 @@
  * Each queue is a discriminated union of job names + payloads so the
  * queue-level Queue<T> / Worker<T> generic stays fully type-safe.
  */
-import { NotificationType, OrderStatus, PaymentStatus } from '@airbus-tools/shared';
+import type { NotificationType, OrderStatus, PaymentStatus } from '@airbus-tools/shared';
 /** Identifies the exact job and enables idempotency checks. */
 export interface BaseJobData {
     /** UUID v4 — generated before enqueueing, stored on the job. */

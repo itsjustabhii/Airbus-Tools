@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
 import type { Product } from '@airbus-tools/shared';
-import { useInfiniteRecommendations } from '../hooks/useInfiniteRecommendations';
+import { Link } from 'react-router-dom';
+
 import { recommendationsApi } from '../api/recommendationsApi';
+import { useInfiniteRecommendations } from '../hooks/useInfiniteRecommendations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -5,28 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.recommendationService = exports.RecommendationService = exports.RANKING_SIGNALS = exports.deliverySignal = exports.stockSignal = exports.recencySignal = exports.popularitySignal = void 0;
 exports.computeScore = computeScore;
-const mongoose_1 = __importDefault(require("mongoose"));
-/**
- * RecommendationService
- *
- * Algorithm (v1 — expandable ranking signals):
- *
- *   1. Resolve the set of product IDs the user has already interacted with.
- *   2. Query MongoDB for ACTIVE products with quantityAvailable > 0 and
- *      entityId $nin the interacted set.
- *   3. Fetch global view-counts for those candidate product IDs so we can
- *      rank by popularity.
- *   4. Apply ranking: each RankingSignal is a pure function that accepts a
- *      candidate doc + context and returns a numeric score contribution.
- *      Signals are summed and candidates are sorted descending.
- *   5. Return cursor-paginated results so the feed can infinitely scroll.
- *
- * Adding a new signal is one addition to the RANKING_SIGNALS array —
- * no other code needs to change.
- */
 const shared_1 = require("@airbus-tools/shared");
-const ProductRepository_1 = require("../database/repositories/ProductRepository");
+const mongoose_1 = __importDefault(require("mongoose"));
 const InteractionRepository_1 = require("../database/repositories/InteractionRepository");
+const ProductRepository_1 = require("../database/repositories/ProductRepository");
 const interactionService_1 = require("./interactionService");
 /**
  * Popularity signal — scales linearly with global view count.

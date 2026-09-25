@@ -5,6 +5,7 @@ import { NotFoundError } from '../core/errors';
 import { successResponse } from '../core/response';
 import { authenticate } from '../middlewares/authenticate';
 import { notificationService } from '../services/notificationService';
+
 import {
   listNotificationsQuerySchema,
   notificationIdParamSchema,

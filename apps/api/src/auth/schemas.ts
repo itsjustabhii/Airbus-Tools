@@ -1,6 +1,6 @@
+import { UserRole } from '@airbus-tools/shared';
 import { z } from 'zod';
 
-import { UserRole } from '@airbus-tools/shared';
 
 // Only AIRLINE and SUPPLIER can self-register
 const REGISTERABLE_ROLES = [UserRole.AIRLINE, UserRole.SUPPLIER] as const;

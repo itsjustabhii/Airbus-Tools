@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE_BYTES } from '../services/s3Service';
 import { config } from '../config/env';
+import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE_BYTES } from '../services/s3Service';
 
 /**
  * Build a validator that only accepts URLs on the configured S3 bucket

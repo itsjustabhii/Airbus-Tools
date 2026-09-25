@@ -32,6 +32,8 @@ export declare class MockPaymentProvider implements IPaymentProvider {
      * identically in `MockPaymentProvider.sign()` so tests can generate
      * valid signatures without coupling to implementation details.
      */
+    /** Maximum age of a valid webhook in seconds (mirrors Stripe's tolerance). */
+    private static readonly WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS;
     parseWebhook(rawBody: Buffer, signature: string): ParsedWebhookEvent;
     /**
      * Generate a valid webhook signature for the given raw body.

@@ -5,6 +5,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    // Sequential execution avoids mongodb-memory-server port collisions & worker exhaustion
+    fileParallelism: false,
     // MongoDB Memory Server can take a while to download on first run
     hookTimeout: 120_000,
     testTimeout: 30_000,

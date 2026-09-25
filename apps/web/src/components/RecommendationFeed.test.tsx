@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { RecommendationFeed } from '../components/RecommendationFeed';
 import { recommendationsApi } from '../api/recommendationsApi';
+import { RecommendationFeed } from '../components/RecommendationFeed';
 
 // ── Mock the API module ───────────────────────────────────────────────────────
 
