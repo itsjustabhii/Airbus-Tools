@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
-import { UnauthorizedError } from '../core/errors';
-import { AUTH_COOKIE_NAME } from '../auth/service';
 import { verifyToken, type JwtPayload } from '../auth/jwt';
+import { AUTH_COOKIE_NAME } from '../auth/service';
 import { isTokenRevoked } from '../auth/tokenRevocation';
+import { UnauthorizedError } from '../core/errors';
 
 // Augment Express Request to carry the authenticated principal
 declare global {

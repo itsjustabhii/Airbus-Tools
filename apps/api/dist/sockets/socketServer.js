@@ -5,11 +5,13 @@ exports.getSocketServer = getSocketServer;
 exports.getIO = getIO;
 exports.resetSocketServer = resetSocketServer;
 const shared_1 = require("@airbus-tools/shared");
+const mongoose_1 = require("mongoose");
 const socket_io_1 = require("socket.io");
-const queues_1 = require("../jobs/queues");
+const env_1 = require("../config/env");
 const logger_1 = require("../core/logger");
 const ConversationRepository_1 = require("../database/repositories/ConversationRepository");
 const MessageRepository_1 = require("../database/repositories/MessageRepository");
+const queues_1 = require("../jobs/queues");
 const middleware_1 = require("./middleware");
 const redis_1 = require("./redis");
 const utils_1 = require("./utils");
@@ -24,10 +26,11 @@ async function initSocketServer(httpServer) {
         logger_1.logger.warn('Socket.io server already initialized. Returning existing instance.');
         return ioInstance;
     }
-    // Create Socket.io server with CORS configured to match Express
+    // Create Socket.io server with CORS configured to match Express REST API.
+    // Uses the same CORS_ORIGIN env value so both transports share one policy.
     const io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: '*', // We can support open CORS or bind to specific configured origin
+            origin: env_1.config.CORS_ORIGIN,
             credentials: true,
         },
         pingTimeout: 60000,
@@ -96,7 +99,10 @@ async function initSocketServer(httpServer) {
                     if (!conversation) {
                         conversation = await ConversationRepository_1.conversationRepository.create({
                             type: shared_1.ConversationType.DIRECT,
-                            participants: [{ userId }, { userId: recipientId }],
+                            participants: [
+                                { userId: new mongoose_1.Types.ObjectId(userId) },
+                                { userId: new mongoose_1.Types.ObjectId(recipientId) },
+                            ],
                         });
                         logger_1.logger.info({ userId, recipientId, conversationId: conversation.id }, '🆕 Created new direct conversation');
                     }
@@ -149,12 +155,12 @@ async function initSocketServer(httpServer) {
                     }
                     // Step 4: Persist message in MongoDB
                     const message = await MessageRepository_1.messageRepository.create({
-                        conversationId,
-                        senderId: userId,
+                        conversationId: new mongoose_1.Types.ObjectId(conversationId),
+                        senderId: new mongoose_1.Types.ObjectId(userId),
                         type: type,
                         content,
                         attachments,
-                        isReadBy: [userId], // Sender has read it
+                        isReadBy: [new mongoose_1.Types.ObjectId(userId)], // Sender has read it
                     });
                     // Update last message metadata in conversation
                     const snippet = type === shared_1.MessageType.TEXT ? content.substring(0, 300) : `[${type}]`;
@@ -267,7 +273,9 @@ async function initSocketServer(httpServer) {
         socket.on('get_message_history', (payload, callback) => {
             void (async () => {
                 try {
-                    const { conversationId, limit = 50, before, since } = payload;
+                    // Cap caller-supplied limit to prevent memory exhaustion
+                    const { conversationId, limit: rawLimit = 50, before, since } = payload;
+                    const limit = Math.min(Math.max(1, rawLimit), 100);
                     if (!conversationId) {
                         throw new Error('conversationId is required');
                     }
@@ -289,11 +297,7 @@ async function initSocketServer(httpServer) {
                         query.createdAt = dateCriteria;
                     }
                     // Fetch messages sorted chronologically (oldest to newest)
-                    const messages = await MessageRepository_1.messageRepository.model
-                        .find(query)
-                        .sort({ createdAt: 1 })
-                        .limit(limit)
-                        .exec();
+                    const messages = await MessageRepository_1.messageRepository.findRaw(query, limit);
                     const messagesJson = messages.map((m) => m.toJSON());
                     if (callback)
                         callback({ success: true, messages: messagesJson });

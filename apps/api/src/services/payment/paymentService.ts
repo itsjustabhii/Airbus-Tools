@@ -25,9 +25,10 @@
  *    payment but re-applies the order update if the order is still PAYMENT_PENDING).
  */
 
+import type { PaymentMethod} from '@airbus-tools/shared';
+import { NotificationType, OrderStatus, PaymentStatus, UserRole } from '@airbus-tools/shared';
 import { v4 as uuidv4 } from 'uuid';
 
-import { NotificationType, OrderStatus, PaymentMethod, PaymentStatus, UserRole } from '@airbus-tools/shared';
 
 import { AppError, ForbiddenError, NotFoundError } from '../../core/errors';
 import { logger } from '../../core/logger';

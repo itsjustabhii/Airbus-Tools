@@ -1,6 +1,6 @@
+import { ConversationType } from '@airbus-tools/shared';
 import type { Router, Request, Response, NextFunction } from 'express';
 import { Router as createRouter } from 'express';
-import { ConversationType } from '@airbus-tools/shared';
 import { Types } from 'mongoose';
 import { z } from 'zod';
 
@@ -162,7 +162,7 @@ router.post('/:id/read', (req: Request, res: Response, next: NextFunction) => {
 
       const now = new Date();
       const { modifiedCount } = await messageRepository.markAllInConversationAsRead(conversationId, userId);
-      await conversationRepository.updateParticipantReadTimestamp(conversationId as string, userId, now);
+      await conversationRepository.updateParticipantReadTimestamp(conversationId, userId, now);
 
       res.status(200).json(
         successResponse({

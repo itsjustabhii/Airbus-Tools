@@ -1,4 +1,5 @@
 import { APP_NAME } from '@airbus-tools/shared';
+
 import { NotificationBell } from '../components/NotificationBell';
 
 export function HomePage() {

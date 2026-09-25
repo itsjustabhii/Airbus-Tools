@@ -9,20 +9,26 @@ const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
 const env_1 = require("./config/env");
+const csrf_1 = require("./middlewares/csrf");
 const errorHandler_1 = require("./middlewares/errorHandler");
+const rateLimiter_1 = require("./middlewares/rateLimiter");
 const requestId_1 = require("./middlewares/requestId");
 const auth_1 = require("./routes/auth");
-const health_1 = require("./routes/health");
 const conversations_1 = require("./routes/conversations");
+const health_1 = require("./routes/health");
+const notifications_1 = require("./routes/notifications");
 const orders_1 = require("./routes/orders");
+const payments_1 = require("./routes/payments");
 const products_1 = require("./routes/products");
 const profile_1 = require("./routes/profile");
-const notifications_1 = require("./routes/notifications");
 const recommendations_1 = require("./routes/recommendations");
-const payments_1 = require("./routes/payments");
 const upload_1 = require("./routes/upload");
 function createApp() {
     const app = (0, express_1.default)();
+    // ── Trust proxy (for correct client IP behind load balancers in production) ─
+    if (env_1.config.NODE_ENV === 'production') {
+        app.set('trust proxy', 1);
+    }
     // ── Security headers ────────────────────────────────────────────────────────
     app.use((0, helmet_1.default)());
     // ── CORS ────────────────────────────────────────────────────────────────────
@@ -40,6 +46,10 @@ function createApp() {
     app.use((0, cookie_parser_1.default)(env_1.config.COOKIE_SECRET));
     // ── Request ID ──────────────────────────────────────────────────────────────
     app.use(requestId_1.requestIdMiddleware);
+    // ── CSRF protection (double-submit cookie) ───────────────────────────────────
+    app.use(csrf_1.csrfProtection);
+    // ── Global rate limiting ─────────────────────────────────────────────────────
+    app.use(rateLimiter_1.generalRateLimiter);
     // ── Routes ──────────────────────────────────────────────────────────────────
     app.use(health_1.healthRouter);
     app.use(env_1.config.API_PREFIX, health_1.healthRouter);
@@ -52,18 +62,6 @@ function createApp() {
     app.use(`${env_1.config.API_PREFIX}/payments`, payments_1.paymentsRouter);
     app.use(`${env_1.config.API_PREFIX}/conversations`, conversations_1.conversationsRouter);
     app.use(`${env_1.config.API_PREFIX}/notifications`, notifications_1.notificationsRouter);
-    // Also support /api/* directly if prefix is /api/v1
-    if (env_1.config.API_PREFIX !== '/api') {
-        app.use('/api/auth', auth_1.authRouter);
-        app.use('/api/profile', profile_1.profileRouter);
-        app.use('/api/uploads', upload_1.uploadRouter);
-        app.use('/api/products', products_1.productsRouter);
-        app.use('/api/recommendations', recommendations_1.recommendationsRouter);
-        app.use('/api/orders', orders_1.ordersRouter);
-        app.use('/api/payments', payments_1.paymentsRouter);
-        app.use('/api/conversations', conversations_1.conversationsRouter);
-        app.use('/api/notifications', notifications_1.notificationsRouter);
-    }
     // ── 404 handler ─────────────────────────────────────────────────────────────
     app.use((_req, res) => {
         res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } });

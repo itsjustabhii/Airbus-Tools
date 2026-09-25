@@ -7,10 +7,10 @@ exports.PRESIGNED_URL_EXPIRATION_SECONDS = exports.MAX_FILE_SIZE_BYTES = exports
 exports.getS3Client = getS3Client;
 exports.generateSafeObjectKey = generateSafeObjectKey;
 exports.createPresignedUploadUrl = createPresignedUploadUrl;
+const path_1 = __importDefault(require("path"));
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const uuid_1 = require("uuid");
-const path_1 = __importDefault(require("path"));
 const env_1 = require("../config/env");
 const errors_1 = require("../core/errors");
 exports.ALLOWED_IMAGE_TYPES = {
@@ -86,7 +86,8 @@ async function createPresignedUploadUrl(options) {
         Bucket: env_1.config.AWS_S3_BUCKET,
         Key: key,
         ContentType: contentType,
-        ...(fileSize ? { ContentLength: fileSize } : {}),
+        // ContentLength is always set — required to enforce size limits in the presigned URL
+        ...(fileSize !== undefined ? { ContentLength: fileSize } : {}),
         Metadata: {
             'uploaded-by': userId,
             'original-filename': fileName ? path_1.default.basename(fileName).replace(/[^\x20-\x7E]/g, '') : '',

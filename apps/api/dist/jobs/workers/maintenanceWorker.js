@@ -34,8 +34,26 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createMaintenanceWorker = createMaintenanceWorker;
-const bullmq_1 = require("bullmq");
+/**
+ * Maintenance queue worker.
+ *
+ * Handles four scheduled job types that run on a cron schedule (managed by
+ * `scheduler.ts`) and must NOT be invoked inside HTTP request handlers:
+ *
+ *  1. `expire-stale-orders`             — cancel PENDING orders older than a
+ *                                         configurable threshold.
+ *  2. `send-pending-reminders`          — send reminder emails/notifications
+ *                                         for orders awaiting action.
+ *  3. `process-pending-notifications`   — fan out queued notifications that
+ *                                         couldn't be delivered in real-time.
+ *  4. `reconcile-pending-payments`      — trigger reconciliation jobs for
+ *                                         payments stuck in PENDING status.
+ *
+ * All handlers are idempotent: running the same job twice produces the same
+ * result as running it once.
+ */
 const shared_1 = require("@airbus-tools/shared");
+const bullmq_1 = require("bullmq");
 const logger_1 = require("../../core/logger");
 const Notification_1 = require("../../database/models/Notification");
 const Order_1 = require("../../database/models/Order");

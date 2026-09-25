@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.orderIdParamSchema = exports.listOrdersQuerySchema = exports.transitionOrderSchema = exports.createOrderSchema = exports.orderItemInputSchema = exports.shippingAddressSchema = void 0;
-const zod_1 = require("zod");
 const shared_1 = require("@airbus-tools/shared");
+const zod_1 = require("zod");
 // ── Shared sub-schemas ───────────────────────────────────────────────────────
 exports.shippingAddressSchema = zod_1.z.object({
     street: zod_1.z.string().trim().min(1).max(200),
@@ -36,6 +36,9 @@ exports.listOrdersQuerySchema = zod_1.z.object({
 });
 // ── Params ───────────────────────────────────────────────────────────────────
 exports.orderIdParamSchema = zod_1.z.object({
-    id: zod_1.z.string().trim().min(1),
+    id: zod_1.z
+        .string()
+        .trim()
+        .regex(/^[0-9a-fA-F]{24}$/, 'Invalid order ID — must be a 24-character hex ObjectId'),
 });
 //# sourceMappingURL=orders.schemas.js.map

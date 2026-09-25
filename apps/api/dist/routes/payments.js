@@ -1,12 +1,58 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentsRouter = void 0;
-const express_1 = require("express");
-const express_2 = __importDefault(require("express"));
+/**
+ * Payments router — Phase 10
+ *
+ * Routes:
+ *   POST   /payments              — create a payment intent  (AIRLINE)
+ *   POST   /payments/:id/confirm  — confirm / capture intent (AIRLINE)
+ *   GET    /payments/:id          — fetch payment details    (AIRLINE | SUPPLIER | ADMIN)
+ *   POST   /payments/:id/refund   — initiate refund          (AIRLINE | ADMIN)
+ *   POST   /payments/webhook      — provider webhook         (no auth — sig-validated)
+ *
+ * The webhook route intentionally sits before the `authenticate` middleware
+ * so raw Buffer body parsing is applied to that path only.
+ *
+ * IMPORTANT: The `express.raw()` body parser for the webhook must be
+ * registered in app.ts BEFORE `express.json()`, OR the webhook route must
+ * use its own raw parser as done here.
+ */
 const shared_1 = require("@airbus-tools/shared");
+const express_1 = __importStar(require("express"));
 const response_1 = require("../core/response");
 const authenticate_1 = require("../middlewares/authenticate");
 const authorize_1 = require("../middlewares/authorize");
@@ -25,7 +71,7 @@ exports.paymentsRouter = router;
  * An invalid signature returns HTTP 400 (not 401/403) to avoid leaking
  * information about what is a valid versus unknown endpoint.
  */
-router.post('/webhook', express_2.default.raw({ type: '*/*', limit: '256kb' }), (req, res, next) => {
+router.post('/webhook', express_1.default.raw({ type: '*/*', limit: '256kb' }), (req, res, next) => {
     void (async () => {
         try {
             const signature = req.headers['x-payment-signature'];

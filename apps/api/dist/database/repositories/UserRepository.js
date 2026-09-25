@@ -3,6 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userRepository = exports.UserRepository = void 0;
 const User_1 = require("../models/User");
 const BaseRepository_1 = require("./BaseRepository");
+/**
+ * Escapes all regex special characters in a string so that it can be safely
+ * used inside `new RegExp()` without enabling ReDoS via attacker-controlled input.
+ */
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 class UserRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(User_1.UserModel);
@@ -37,7 +44,9 @@ class UserRepository extends BaseRepository_1.BaseRepository {
             query.organizationId = filter.organizationId;
         }
         if (filter.search) {
-            const searchRegex = new RegExp(filter.search.trim(), 'i');
+            // Escape user input before compiling to regex to prevent ReDoS.
+            const safePattern = escapeRegex(filter.search.trim());
+            const searchRegex = new RegExp(safePattern, 'i');
             query.$or = [
                 { email: searchRegex },
                 { firstName: searchRegex },

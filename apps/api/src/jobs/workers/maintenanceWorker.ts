@@ -16,10 +16,10 @@
  * All handlers are idempotent: running the same job twice produces the same
  * result as running it once.
  */
+import { OrderStatus, PaymentStatus, NotificationType } from '@airbus-tools/shared';
 import type { Job } from 'bullmq';
 import { Worker } from 'bullmq';
 
-import { OrderStatus, PaymentStatus, NotificationType } from '@airbus-tools/shared';
 
 import { logger } from '../../core/logger';
 import { NotificationModel } from '../../database/models/Notification';

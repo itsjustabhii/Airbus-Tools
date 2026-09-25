@@ -14,9 +14,9 @@
  * IMPORTANT: Scheduler setup must run inside the worker process, NOT inside the
  * HTTP server process, so that jobs are not enqueued from request handlers.
  */
+import { OrderStatus } from '@airbus-tools/shared';
 import { v4 as uuidv4 } from 'uuid';
 
-import { OrderStatus } from '@airbus-tools/shared';
 
 import { logger } from '../core/logger';
 

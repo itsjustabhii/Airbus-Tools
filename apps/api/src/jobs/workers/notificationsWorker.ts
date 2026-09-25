@@ -12,10 +12,10 @@
  * Before persisting, we query for an existing notification with that jobId to
  * avoid duplicates on retries.
  */
+import { NotificationType } from '@airbus-tools/shared';
 import type { Job } from 'bullmq';
 import { Worker } from 'bullmq';
 
-import { NotificationType } from '@airbus-tools/shared';
 
 import { logger } from '../../core/logger';
 import { NotificationModel } from '../../database/models/Notification';

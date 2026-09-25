@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { OrderStatus } from '@airbus-tools/shared';
+import { z } from 'zod';
 export declare const shippingAddressSchema: z.ZodObject<{
     street: z.ZodString;
     city: z.ZodString;

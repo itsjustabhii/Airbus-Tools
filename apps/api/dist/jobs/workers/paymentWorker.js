@@ -1,14 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPaymentWorker = createPaymentWorker;
-const bullmq_1 = require("bullmq");
+/**
+ * Payment queue worker.
+ *
+ * Handles three job types:
+ *  - `process-payment`   — simulate a payment gateway call and update the
+ *                          PaymentDocument status (AUTHORIZED → CAPTURED).
+ *  - `refund-payment`    — initiate a refund flow and set status to REFUNDED.
+ *  - `reconcile-payment` — sync the local status with the upstream gateway's
+ *                          reported status and resolve mismatches.
+ *
+ * All handlers are idempotent: before mutating the payment record the worker
+ * checks whether the payment is already in the expected terminal state.
+ *
+ * In a real deployment the gateway API calls (marked "// stub") are replaced
+ * with actual provider SDK calls (Stripe, Adyen, etc.).
+ */
 const shared_1 = require("@airbus-tools/shared");
+const shared_2 = require("@airbus-tools/shared");
+const bullmq_1 = require("bullmq");
 const logger_1 = require("../../core/logger");
 const Payment_1 = require("../../database/models/Payment");
 const queues_1 = require("../queues");
 const redis_1 = require("../redis");
 const types_1 = require("../types");
-const shared_2 = require("@airbus-tools/shared");
 // ── Handlers ──────────────────────────────────────────────────────────────────
 async function handleProcessPayment(job, data) {
     const log = logger_1.logger.child({

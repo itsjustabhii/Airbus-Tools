@@ -24,7 +24,8 @@
  *    on the next webhook retry (idempotency guard skips the already-captured
  *    payment but re-applies the order update if the order is still PAYMENT_PENDING).
  */
-import { PaymentMethod, UserRole } from '@airbus-tools/shared';
+import type { PaymentMethod } from '@airbus-tools/shared';
+import { UserRole } from '@airbus-tools/shared';
 import type { IPaymentDocument } from '../../database/models/Payment';
 import type { IPaymentProvider } from './IPaymentProvider';
 export interface CreatePaymentInput {

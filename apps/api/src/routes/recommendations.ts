@@ -1,7 +1,7 @@
+import type { ApiMeta } from '@airbus-tools/shared';
 import { Router as createRouter } from 'express';
 import type { Router, Request, Response, NextFunction } from 'express';
 
-import type { ApiMeta } from '@airbus-tools/shared';
 
 import { successResponse } from '../core/response';
 import { authenticate } from '../middlewares/authenticate';

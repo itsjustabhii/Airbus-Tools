@@ -109,9 +109,8 @@ class NotificationService {
      * List notifications with pagination and optional isRead filter.
      */
     async listNotifications(userId, page = 1, limit = 20, isRead) {
-        const skip = (page - 1) * limit;
         return NotificationRepository_1.notificationRepository.findByUser(userId, isRead, {
-            skip,
+            page,
             limit,
         });
     }

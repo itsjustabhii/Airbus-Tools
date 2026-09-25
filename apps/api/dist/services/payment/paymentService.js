@@ -27,8 +27,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentService = void 0;
-const uuid_1 = require("uuid");
 const shared_1 = require("@airbus-tools/shared");
+const uuid_1 = require("uuid");
 const errors_1 = require("../../core/errors");
 const logger_1 = require("../../core/logger");
 const OrderRepository_1 = require("../../database/repositories/OrderRepository");

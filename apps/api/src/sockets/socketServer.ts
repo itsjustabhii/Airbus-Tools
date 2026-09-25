@@ -5,10 +5,10 @@ import { Types } from 'mongoose';
 import { Server } from 'socket.io';
 
 import { config } from '../config/env';
-import { enqueueNotification, newJobId } from '../jobs/queues';
 import { logger } from '../core/logger';
 import { conversationRepository } from '../database/repositories/ConversationRepository';
 import { messageRepository } from '../database/repositories/MessageRepository';
+import { enqueueNotification, newJobId } from '../jobs/queues';
 
 import {
   socketAuthMiddleware,

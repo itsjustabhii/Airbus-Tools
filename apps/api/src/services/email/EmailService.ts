@@ -23,6 +23,7 @@
 import { config } from '../../config/env';
 import { logger } from '../../core/logger';
 import type { EmailJobData } from '../../jobs/types';
+
 import type { IEmailAdapter } from './IEmailAdapter';
 import { LocalEmailAdapter } from './LocalEmailAdapter';
 import { SesEmailAdapter } from './SesEmailAdapter';

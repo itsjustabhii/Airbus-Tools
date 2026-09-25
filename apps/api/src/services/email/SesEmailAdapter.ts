@@ -16,6 +16,7 @@ import {
 
 import { config } from '../../config/env';
 import { logger } from '../../core/logger';
+
 import type { IEmailAdapter, SendEmailInput, SendEmailResult } from './IEmailAdapter';
 
 let sesClientInstance: SESClient | null = null;

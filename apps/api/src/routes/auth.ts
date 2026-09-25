@@ -1,11 +1,7 @@
 import type { Router, Request, Response, NextFunction } from 'express';
 import { Router as createRouter } from 'express';
 
-import { config } from '../config/env';
-import { successResponse } from '../core/response';
-import { authenticate } from '../middlewares/authenticate';
-import { setCsrfCookie } from '../middlewares/csrf';
-import { authRateLimiter } from '../middlewares/rateLimiter';
+import { registerSchema, loginSchema, changePasswordSchema } from '../auth/schemas';
 import {
   registerUser,
   loginUser,
@@ -13,7 +9,11 @@ import {
   changePassword,
   AUTH_COOKIE_NAME,
 } from '../auth/service';
-import { registerSchema, loginSchema, changePasswordSchema } from '../auth/schemas';
+import { config } from '../config/env';
+import { successResponse } from '../core/response';
+import { authenticate } from '../middlewares/authenticate';
+import { setCsrfCookie } from '../middlewares/csrf';
+import { authRateLimiter } from '../middlewares/rateLimiter';
 
 const router: Router = createRouter();
 

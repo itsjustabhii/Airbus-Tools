@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { ProductCategory, ProductCondition } from '@airbus-tools/shared';
 import type { Product } from '@airbus-tools/shared';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+
 import { productsApi, type ListProductsParams, type ProductsListMeta } from '../api/productsApi';
 
 const CATEGORY_LABELS: Record<string, string> = {

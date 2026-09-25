@@ -11,6 +11,8 @@ export declare class MessageRepository extends BaseRepository<IMessageDocument> 
         modifiedCount: number;
     }>;
     countUnreadInConversation(conversationId: string, userId: string): Promise<number>;
+    /** Raw chronological query used by REST and WebSocket message-history endpoints. */
+    findRaw(query: Record<string, unknown>, limit: number): Promise<IMessageDocument[]>;
 }
 export declare const messageRepository: MessageRepository;
 //# sourceMappingURL=MessageRepository.d.ts.map

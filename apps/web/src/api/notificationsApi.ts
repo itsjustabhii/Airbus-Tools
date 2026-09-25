@@ -1,4 +1,5 @@
 import type { Notification } from '@airbus-tools/shared';
+
 import { apiClient } from './profileApi';
 
 export interface ListNotificationsParams {

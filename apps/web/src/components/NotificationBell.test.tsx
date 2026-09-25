@@ -1,10 +1,11 @@
+import { NotificationType } from '@airbus-tools/shared';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotificationType } from '@airbus-tools/shared';
+
+import { notificationsApi } from '../api/notificationsApi';
 
 import { NotificationBell } from './NotificationBell';
-import { notificationsApi } from '../api/notificationsApi';
 
 vi.mock('../api/notificationsApi', () => ({
   notificationsApi: {

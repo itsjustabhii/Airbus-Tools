@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ordersRouter = void 0;
-const express_1 = require("express");
 const shared_1 = require("@airbus-tools/shared");
+const express_1 = require("express");
 const errors_1 = require("../core/errors");
 const response_1 = require("../core/response");
 const authenticate_1 = require("../middlewares/authenticate");

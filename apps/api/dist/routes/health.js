@@ -14,10 +14,10 @@ exports.healthRouter = router;
  * Liveness probe — returns 200 if the process is running.
  */
 router.get('/health', (_req, res) => {
+    // Omit app version to avoid fingerprinting — expose status and timestamp only
     res.status(200).json((0, response_1.successResponse)({
         status: 'ok',
         app: shared_1.APP_NAME,
-        version: shared_1.APP_VERSION,
         timestamp: new Date().toISOString(),
     }));
 });
@@ -31,11 +31,16 @@ router.get('/ready', (_req, res, next) => {
             const dbHealth = await connection_1.database.getHealthStatus();
             const isHealthy = dbHealth.status === 'healthy' || dbHealth.status === 'degraded';
             const statusCode = isHealthy ? 200 : 503;
+            // Strip host/port/name from the public response to avoid infrastructure fingerprinting.
             res.status(statusCode).json((0, response_1.successResponse)({
                 status: isHealthy ? 'ready' : 'not_ready',
                 timestamp: new Date().toISOString(),
                 services: {
-                    database: dbHealth,
+                    database: {
+                        status: dbHealth.status,
+                        state: dbHealth.state,
+                        pingTimeMs: dbHealth.pingTimeMs,
+                    },
                 },
             }));
         }
@@ -49,6 +54,12 @@ router.get('/ready', (_req, res, next) => {
  * Queue health endpoint — returns job counts for all four BullMQ queues.
  * Requires a live Redis connection; returns 503 if Redis is not available.
  */
+/**
+ * GET /queues/health
+ * Returns aggregate queue health (up/degraded/down) without exposing
+ * internal queue names, job counts, or raw error messages.
+ * Intended for internal monitoring systems; restrict access via network policy.
+ */
 router.get('/queues/health', (_req, res, next) => {
     void (async () => {
         try {
@@ -61,15 +72,12 @@ router.get('/queues/health', (_req, res, next) => {
             const queueStats = await Promise.all(queueDefs.map(async ({ name, fn }) => {
                 try {
                     const queue = fn();
-                    const counts = await queue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed');
-                    return { name, status: 'ok', counts };
+                    await queue.getJobCounts('waiting', 'active', 'failed');
+                    return { name, status: 'ok' };
                 }
-                catch (err) {
-                    return {
-                        name,
-                        status: 'error',
-                        error: err instanceof Error ? err.message : 'Unknown error',
-                    };
+                catch {
+                    // Omit error details — they may contain internal paths or queue config
+                    return { name, status: 'error' };
                 }
             }));
             const anyError = queueStats.some((q) => q.status === 'error');

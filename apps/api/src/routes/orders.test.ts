@@ -14,6 +14,7 @@
  *  - GET  /orders scoping       (airline only sees their orders; supplier only sees their sales)
  */
 
+import { OrderStatus, PaymentMethod, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
 import bcrypt from 'bcrypt';
 import supertest from 'supertest';
 import {
@@ -21,14 +22,13 @@ import {
   beforeAll, afterAll, beforeEach,
 } from 'vitest';
 
-import { OrderStatus, PaymentMethod, UserRole, UserStatus, ProductStatus, ProductCategory, ProductCondition } from '@airbus-tools/shared';
 
 import { createApp } from '../app';
 import { signToken } from '../auth/jwt';
 import { AUTH_COOKIE_NAME } from '../auth/service';
-import { UserModel } from '../database/models/User';
-import { ProductModel } from '../database/models/Product';
 import { OrderModel } from '../database/models/Order';
+import { ProductModel } from '../database/models/Product';
+import { UserModel } from '../database/models/User';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../database/test-utils';
 import { MockPaymentProvider } from '../services/payment/MockPaymentProvider';
 
@@ -187,9 +187,9 @@ describe('POST /api/v1/orders — create order', () => {
     const order = await OrderModel.findById(orderId);
     expect(order).not.toBeNull();
     expect(order!.status).toBe(OrderStatus.PENDING);
-    expect(order!.items[0]!.unitPrice).toBe(150);
-    expect(order!.items[0]!.currency).toBe('USD');
-    expect(order!.items[0]!.quantity).toBe(2);
+    expect(order!.items[0].unitPrice).toBe(150);
+    expect(order!.items[0].currency).toBe('USD');
+    expect(order!.items[0].quantity).toBe(2);
     expect(order!.subtotal).toBe(300);
     expect(order!.placedAt).toBeDefined();
     void product;
@@ -202,7 +202,7 @@ describe('POST /api/v1/orders — create order', () => {
     await ProductModel.findByIdAndUpdate(product._id, { price: 9999 });
 
     const order = await OrderModel.findById(orderId);
-    expect(order!.items[0]!.unitPrice).toBe(150);   // original price
+    expect(order!.items[0].unitPrice).toBe(150);   // original price
     expect(order!.totalAmount).toBe(300);             // original total
   });
 

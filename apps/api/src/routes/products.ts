@@ -1,8 +1,8 @@
+import type { ApiMeta } from '@airbus-tools/shared';
+import { ProductStatus, UserRole } from '@airbus-tools/shared';
 import type { Router, Request, Response, NextFunction } from 'express';
 import { Router as createRouter } from 'express';
 
-import type { ApiMeta } from '@airbus-tools/shared';
-import { ProductStatus, UserRole } from '@airbus-tools/shared';
 
 import { ForbiddenError, NotFoundError, ValidationError } from '../core/errors';
 import { successResponse } from '../core/response';
@@ -63,8 +63,8 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
       if (query.sellerId !== undefined) catalogFilter.sellerId = query.sellerId;
       if (query.minPrice !== undefined) catalogFilter.minPrice = query.minPrice;
       if (query.maxPrice !== undefined) catalogFilter.maxPrice = query.maxPrice;
-      if (query.tags !== undefined) catalogFilter.tags = query.tags as string[];
-      if (query.certifications !== undefined) catalogFilter.certifications = query.certifications as string[];
+      if (query.tags !== undefined) catalogFilter.tags = query.tags;
+      if (query.certifications !== undefined) catalogFilter.certifications = query.certifications;
       if (query.search !== undefined) catalogFilter.searchTerm = query.search;
 
       const cursorOptions: import('../database/repositories/BaseRepository').CursorPaginationOptions = {

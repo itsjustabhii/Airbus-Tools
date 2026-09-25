@@ -14,6 +14,7 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
 import { config } from '../../config/env';
+
 import type {
   IPaymentProvider,
   CreatePaymentIntentInput,

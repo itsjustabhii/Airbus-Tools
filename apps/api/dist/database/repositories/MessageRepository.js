@@ -36,6 +36,10 @@ class MessageRepository extends BaseRepository_1.BaseRepository {
             isReadBy: { $ne: userId },
         });
     }
+    /** Raw chronological query used by REST and WebSocket message-history endpoints. */
+    async findRaw(query, limit) {
+        return this.model.find(query).sort({ createdAt: 1 }).limit(limit).exec();
+    }
 }
 exports.MessageRepository = MessageRepository;
 exports.messageRepository = new MessageRepository();

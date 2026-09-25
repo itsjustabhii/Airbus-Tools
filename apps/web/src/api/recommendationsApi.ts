@@ -1,4 +1,5 @@
 import type { Product } from '@airbus-tools/shared';
+
 import { apiClient } from './profileApi';
 
 // ── Response shapes ───────────────────────────────────────────────────────────

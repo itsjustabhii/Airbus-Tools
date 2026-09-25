@@ -1,12 +1,12 @@
+import { NotificationType, OrderStatus, UserRole, type OrderItem } from '@airbus-tools/shared';
 import { v4 as uuidv4 } from 'uuid';
 
-import { NotificationType, OrderStatus, UserRole, type OrderItem } from '@airbus-tools/shared';
 
 import { ForbiddenError, NotFoundError } from '../core/errors';
 import { OrderModel, type IOrderDocument } from '../database/models/Order';
 import { ProductModel } from '../database/models/Product';
-import { orderRepository, type OrderFilter } from '../database/repositories/OrderRepository';
 import type { PaginatedResult, PaginationOptions } from '../database/repositories/BaseRepository';
+import { orderRepository, type OrderFilter } from '../database/repositories/OrderRepository';
 import { enqueueEmail, enqueueNotification, newJobId } from '../jobs/queues';
 
 import { assertTransition, isTerminal } from './orderStateMachine';
@@ -95,7 +95,7 @@ export class OrderService {
       throw new ForbiddenError('All items in a single order must belong to the same supplier');
     }
 
-    const sellerId = [...sellerIds][0]!;
+    const sellerId = [...sellerIds][0];
 
     // Build price-snapshotted items
     const now = new Date();
@@ -129,7 +129,7 @@ export class OrderService {
       tax,
       shippingFee,
       totalAmount,
-      currency: orderItems[0]!.currency,
+      currency: orderItems[0]?.currency ?? 'USD',
       shippingAddress,
       ...(notes !== undefined ? { notes } : {}),
       placedAt: now,
@@ -165,7 +165,7 @@ export class OrderService {
       enqueueNotification({
         name: 'create-notification',
         jobId: newJobId(),
-        userId: sellerId,
+        userId: sellerId ?? '',
         type: NotificationType.ORDER_UPDATE,
         title: 'New Order Received',
         message: `You have received a new order ${order.orderNumber}. Please review and accept or reject it.`,

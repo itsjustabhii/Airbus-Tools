@@ -1,7 +1,7 @@
 import { OrderStatus, UserRole } from '@airbus-tools/shared';
 import { type IOrderDocument } from '../database/models/Order';
-import { type OrderFilter } from '../database/repositories/OrderRepository';
 import type { PaginatedResult, PaginationOptions } from '../database/repositories/BaseRepository';
+import { type OrderFilter } from '../database/repositories/OrderRepository';
 export interface CreateOrderItemInput {
     productId: string;
     quantity: number;

@@ -1,3 +1,4 @@
+import { ProductStatus } from '@airbus-tools/shared';
 import mongoose from 'mongoose';
 
 /**
@@ -19,12 +20,12 @@ import mongoose from 'mongoose';
  * no other code needs to change.
  */
 
-import { ProductStatus } from '@airbus-tools/shared';
 import type { FilterQuery } from 'mongoose';
 
 import type { IProductDocument } from '../database/models/Product';
-import { productRepository } from '../database/repositories/ProductRepository';
 import { interactionRepository } from '../database/repositories/InteractionRepository';
+import { productRepository } from '../database/repositories/ProductRepository';
+
 import { interactionService } from './interactionService';
 
 // ── Ranking signal infrastructure ─────────────────────────────────────────────

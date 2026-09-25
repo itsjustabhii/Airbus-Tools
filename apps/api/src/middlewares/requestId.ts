@@ -24,6 +24,6 @@ export function requestIdMiddleware(req: Request, _res: Response, next: NextFunc
     typeof existing === 'string' &&
     existing.length > 0 &&
     REQUEST_ID_PATTERN.test(existing);
-  req.requestId = isValidId ? (existing as string) : uuidv4();
+  req.requestId = isValidId ? (existing) : uuidv4();
   next();
 }

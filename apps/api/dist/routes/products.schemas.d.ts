@@ -38,6 +38,7 @@ export declare const listProductsQuerySchema: z.ZodObject<{
     status?: ProductStatus | undefined;
     search?: string | undefined;
     cursor?: string | undefined;
+    direction?: "next" | "prev" | undefined;
     sellerId?: string | undefined;
     category?: ProductCategory | undefined;
     condition?: ProductCondition | undefined;
@@ -45,12 +46,12 @@ export declare const listProductsQuerySchema: z.ZodObject<{
     tags?: string[] | undefined;
     minPrice?: number | undefined;
     maxPrice?: number | undefined;
-    direction?: "next" | "prev" | undefined;
 }, {
     status?: ProductStatus | undefined;
-    search?: string | undefined;
     limit?: number | undefined;
+    search?: string | undefined;
     cursor?: string | undefined;
+    direction?: "next" | "prev" | undefined;
     sellerId?: string | undefined;
     category?: ProductCategory | undefined;
     condition?: ProductCondition | undefined;
@@ -58,7 +59,6 @@ export declare const listProductsQuerySchema: z.ZodObject<{
     tags?: string | undefined;
     minPrice?: number | undefined;
     maxPrice?: number | undefined;
-    direction?: "next" | "prev" | undefined;
     sortBy?: "createdAt" | "title" | "price" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
 }>;
@@ -87,12 +87,12 @@ export declare const createProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit: "m" | "mm" | "cm" | "in" | "ft";
+        unit: "m" | "ft" | "mm" | "cm" | "in";
     }, {
         length: number;
         width: number;
         height: number;
-        unit?: "m" | "mm" | "cm" | "in" | "ft" | undefined;
+        unit?: "m" | "ft" | "mm" | "cm" | "in" | undefined;
     }>>;
     weightKg: z.ZodOptional<z.ZodNumber>;
     mediaUrls: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -116,7 +116,7 @@ export declare const createProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit: "m" | "mm" | "cm" | "in" | "ft";
+        unit: "m" | "ft" | "mm" | "cm" | "in";
     } | undefined;
     weightKg?: number | undefined;
 }, {
@@ -138,7 +138,7 @@ export declare const createProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit?: "m" | "mm" | "cm" | "in" | "ft" | undefined;
+        unit?: "m" | "ft" | "mm" | "cm" | "in" | undefined;
     } | undefined;
     weightKg?: number | undefined;
     mediaUrls?: string[] | undefined;
@@ -168,12 +168,12 @@ export declare const updateProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit: "m" | "mm" | "cm" | "in" | "ft";
+        unit: "m" | "ft" | "mm" | "cm" | "in";
     }, {
         length: number;
         width: number;
         height: number;
-        unit?: "m" | "mm" | "cm" | "in" | "ft" | undefined;
+        unit?: "m" | "ft" | "mm" | "cm" | "in" | undefined;
     }>>>;
     weightKg: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     mediaUrls: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -196,7 +196,7 @@ export declare const updateProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit: "m" | "mm" | "cm" | "in" | "ft";
+        unit: "m" | "ft" | "mm" | "cm" | "in";
     } | null | undefined;
     weightKg?: number | null | undefined;
     mediaUrls?: string[] | undefined;
@@ -219,7 +219,7 @@ export declare const updateProductSchema: z.ZodObject<{
         length: number;
         width: number;
         height: number;
-        unit?: "m" | "mm" | "cm" | "in" | "ft" | undefined;
+        unit?: "m" | "ft" | "mm" | "cm" | "in" | undefined;
     } | null | undefined;
     weightKg?: number | null | undefined;
     mediaUrls?: string[] | undefined;

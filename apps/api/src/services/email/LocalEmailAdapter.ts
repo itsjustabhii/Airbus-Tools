@@ -6,6 +6,7 @@
  * requiring any AWS credentials or network access.
  */
 import { logger } from '../../core/logger';
+
 import type { IEmailAdapter, SendEmailInput, SendEmailResult } from './IEmailAdapter';
 
 export class LocalEmailAdapter implements IEmailAdapter {

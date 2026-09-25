@@ -9,7 +9,7 @@
  * queue-level Queue<T> / Worker<T> generic stays fully type-safe.
  */
 
-import { NotificationType, OrderStatus, PaymentStatus } from '@airbus-tools/shared';
+import type { NotificationType, OrderStatus, PaymentStatus } from '@airbus-tools/shared';
 
 // ── Common ───────────────────────────────────────────────────────────────────
 

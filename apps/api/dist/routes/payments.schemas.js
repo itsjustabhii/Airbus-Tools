@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentIdParamSchema = exports.refundPaymentSchema = exports.confirmPaymentSchema = exports.createPaymentSchema = void 0;
-const zod_1 = require("zod");
 const shared_1 = require("@airbus-tools/shared");
+const zod_1 = require("zod");
 // ── POST /payments ────────────────────────────────────────────────────────────
 exports.createPaymentSchema = zod_1.z.object({
     orderId: zod_1.z.string().trim().min(1, 'orderId is required'),
@@ -28,6 +28,9 @@ exports.refundPaymentSchema = zod_1.z.object({
 });
 // ── Params ────────────────────────────────────────────────────────────────────
 exports.paymentIdParamSchema = zod_1.z.object({
-    id: zod_1.z.string().trim().min(1),
+    id: zod_1.z
+        .string()
+        .trim()
+        .regex(/^[0-9a-fA-F]{24}$/, 'Invalid payment ID — must be a 24-character hex ObjectId'),
 });
 //# sourceMappingURL=payments.schemas.js.map

@@ -18,9 +18,9 @@ function parseCookies(cookieHeader) {
         return cookies;
     cookieHeader.split(';').forEach((item) => {
         const parts = item.split('=');
-        const name = parts[0].trim();
+        const name = parts[0]?.trim();
         if (name) {
-            cookies[name] = decodeURIComponent((parts[1] || '').trim());
+            cookies[name] = decodeURIComponent((parts[1] ?? '').trim());
         }
     });
     return cookies;
@@ -31,12 +31,12 @@ function parseCookies(cookieHeader) {
  */
 function socketAuthMiddleware(socket, next) {
     const auth = socket.handshake.auth || {};
-    const query = socket.handshake.query || {};
     const cookieHeader = socket.handshake.headers.cookie;
+    // Accept token only from handshake.auth or the HttpOnly cookie.
+    // Query-string tokens are explicitly NOT accepted — URL parameters appear in
+    // access logs, browser history, and referrer headers, which would expose tokens.
     let token = auth.token ||
-        auth.access_token ||
-        query.token ||
-        query.access_token;
+        auth.access_token;
     if (!token && cookieHeader) {
         const cookies = parseCookies(cookieHeader);
         token = cookies[service_1.AUTH_COOKIE_NAME];

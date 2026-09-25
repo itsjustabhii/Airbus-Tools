@@ -19,6 +19,8 @@ export interface RecordInteractionOptions {
     metadata?: Record<string, unknown>;
 }
 export declare class InteractionService {
+    /** Build a partial options object omitting undefined-valued optional fields. */
+    private static buildInteractionOpts;
     /** Record that a user viewed a product listing. */
     recordViewed(productId: string, opts?: RecordInteractionOptions): Promise<IInteractionDocument>;
     /** Record that a user sent a direct inquiry to a supplier about a product. */

@@ -1,5 +1,4 @@
-import type { Model, Document, FilterQuery, UpdateQuery, QueryOptions, ProjectionType, SortOrder } from 'mongoose';
-import type { Types } from 'mongoose';
+import type { Model, Document, FilterQuery, UpdateQuery, QueryOptions, ProjectionType, SortOrder , Types } from 'mongoose';
 
 export interface PaginationOptions {
   page?: number;
@@ -192,11 +191,11 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
     };
 
     const nextCursor = (direction === 'next' && hasMore) || (direction === 'prev' && decodedCursor !== null)
-      ? pageItems.length > 0 ? encodeCursor(pageItems[pageItems.length - 1]!) : null
+      ? pageItems.length > 0 ? encodeCursor(pageItems[pageItems.length - 1] as unknown as T) : null
       : null;
 
     const prevCursor = (direction === 'prev' && hasMore) || (direction === 'next' && decodedCursor !== null)
-      ? pageItems.length > 0 ? encodeCursor(pageItems[0]!) : null
+      ? pageItems.length > 0 ? encodeCursor(pageItems[0] as unknown as T) : null
       : null;
 
     return {

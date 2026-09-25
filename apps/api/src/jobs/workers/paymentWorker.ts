@@ -14,10 +14,11 @@
  * In a real deployment the gateway API calls (marked "// stub") are replaced
  * with actual provider SDK calls (Stripe, Adyen, etc.).
  */
+import { PaymentStatus } from '@airbus-tools/shared';
+import { NotificationType } from '@airbus-tools/shared';
 import type { Job } from 'bullmq';
 import { Worker } from 'bullmq';
 
-import { PaymentStatus } from '@airbus-tools/shared';
 
 import { logger } from '../../core/logger';
 import { PaymentModel } from '../../database/models/Payment';
@@ -31,7 +32,7 @@ import type {
   RefundPaymentData,
 } from '../types';
 import { QUEUE_NAMES } from '../types';
-import { NotificationType } from '@airbus-tools/shared';
+
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 

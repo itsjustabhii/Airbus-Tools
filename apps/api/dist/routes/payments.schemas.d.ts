@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { PaymentMethod } from '@airbus-tools/shared';
+import { z } from 'zod';
 export declare const createPaymentSchema: z.ZodObject<{
     orderId: z.ZodString;
     paymentMethod: z.ZodNativeEnum<typeof PaymentMethod>;
